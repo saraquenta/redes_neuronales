@@ -1,0 +1,221 @@
+<title>¿Número o cantidad? · Laboratorio 4.2</title>
+<!--HEAD-->
+<style>/*COMMON*/
+:root{--lab:#0E7490;--pattern:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Crect x='8' y='10' width='26' height='18' rx='3' fill='none' stroke='%230E7490' stroke-opacity='.14' stroke-width='2'/%3E%3Cpath d='M17 19h8' stroke='%230E7490' stroke-opacity='.14' stroke-width='2'/%3E%3C/svg%3E")}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--lab:#3FD0E8}}
+:root[data-theme="dark"]{--lab:#3FD0E8}
+.deck{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.rec{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;align-items:center}
+.rec .em{font-size:52px;line-height:1;text-align:center}
+.rec .val{font:700 22px var(--f-mono);color:var(--lab)}
+.bins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.bin{font:700 16px var(--f-body);border:2px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink);padding:10px;min-height:72px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;transition:all .12s}
+.bin small{font:400 14px var(--f-body);color:var(--soft)}
+.bin:hover{border-color:var(--lab)}
+.bin.right{border-color:var(--ok);background:var(--ok-soft)} .bin.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.bin:disabled{cursor:default}
+.score{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.idc{background:linear-gradient(135deg,color-mix(in srgb,var(--lab) 18%,var(--card)),var(--card));border:2px solid var(--ink);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px;box-shadow:3px 3px 0 var(--ink)}
+.idc .nm{font:800 20px var(--f-display)}
+.idc .f{display:flex;justify-content:space-between;font-size:15px;gap:6px;flex-wrap:wrap}
+.idc .f b{font-family:var(--f-mono)}
+.idc .f.hl{background:var(--spark-soft);border-radius:6px;padding:0 4px}
+.result{font:800 clamp(22px,5vw,30px) var(--f-display);text-align:center;padding:8px;border-radius:12px;background:var(--paper)}
+.srow{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.srow .it{font-size:16px}
+.srow .it code{font:500 13px var(--f-mono);background:var(--paper);padding:2px 5px;border-radius:5px}
+.srow .row{gap:6px}
+.srow .opt{min-height:40px;font-size:14px;padding:6px 10px}
+.srow .why{font-size:14px;color:var(--soft)}
+</style>
+<header class="band hero-band">
+  <div class="wrap hero">
+    <div class="hero-text">
+      <span class="book">Redes Neuronales en Mortales · Capítulo I · Sección 4</span>
+      <span class="tag">Laboratorio 4.2</span>
+      <h1>¿Número o cantidad? Clasifica los datos</h1>
+      <p class="lede">Las notas del curso, una foto del Illimani y la nota de voz de un amigo son datos, pero no se parecen en nada. Aquí vas a clasificarlos y a comprobar por qué tu carnet no es una cantidad.</p>
+      <div class="meta"><span>⏱ 7 minutos</span><span>Solo necesitas preguntarte: ¿se cuenta, se mide o es una etiqueta?</span></div>
+    </div>
+    <div class="art" aria-hidden="true">
+      <svg class="scene" viewBox="0 0 220 190">
+        <rect x="40" y="40" width="140" height="140" rx="10" fill="color-mix(in srgb,var(--lab) 30%,var(--card))" stroke="var(--ink)" stroke-width="3"/>
+        <g stroke="var(--ink)" stroke-width="3" fill="var(--card)">
+          <rect x="52" y="52" width="116" height="26" rx="5"/><rect x="52" y="84" width="116" height="26" rx="5"/><rect x="52" y="116" width="116" height="26" rx="5"/><rect x="52" y="148" width="116" height="24" rx="5"/></g>
+        <g fill="var(--ink)" font-family="JetBrains Mono,monospace" font-size="10" font-weight="700">
+          <text x="62" y="69">🔢 DISCRETO</text><text x="62" y="101">📏 CONTINUO</text><text x="62" y="133">🏷️ NOMINAL</text><text x="62" y="164">🪜 ORDINAL</text></g>
+        <g transform="rotate(-10 60 30)"><rect x="16" y="8" width="84" height="44" rx="6" fill="var(--spark-soft)" stroke="var(--ink)" stroke-width="3"/><text x="58" y="27" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" font-weight="700" fill="var(--ink)">CARNET</text><text x="58" y="42" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="var(--ink)">6 512 345</text></g>
+      </svg>
+      <div data-chispa="think" class="chispa-mini"></div>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="sec">
+    <span class="kicker">Primero, la idea</span>
+    <div class="strip">
+      <div class="panel"><span class="n">1</span><span class="pic" aria-hidden="true">🗂️</span><p><strong>Según su estructura:</strong> una tabla con filas y columnas, un JSON con algo de orden, o una foto sin esquema.</p></div>
+      <div class="panel"><span class="n">2</span><span class="pic" aria-hidden="true">🔢</span><p><strong>Según su naturaleza:</strong> números que se <strong>cuentan</strong> o se <strong>miden</strong>, y categorías <strong>con</strong> o <strong>sin</strong> orden.</p></div>
+      <div class="panel"><span class="n">3</span><span class="pic" aria-hidden="true">🪪</span><p><strong>Cuidado:</strong> algunos números no son cantidades. Tu carnet es un número, pero no «vale más» que otro.</p></div>
+    </div>
+    <div class="prose"><p>Para la computadora todo termina siendo números (lo verás en la sección 5.3). Pero el <strong>tipo de dato</strong> decide qué técnicas se pueden usar y cuánto trabajo costará prepararlo. Por eso conviene aprender a clasificar. También hay otras dos miradas, según su <strong>modalidad</strong> (texto, imagen, audio…) y según si tienen <button class="term" data-def="Un dato etiquetado viene con la respuesta correcta: una foto marcada como «gato», un correo marcado como «spam».">etiqueta</button>, pero aquí nos enfocamos en las dos primeras.</p></div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ahora, pruébalo</span>
+    <div id="guide"></div>
+    <div class="bench">
+      <div class="score"><h3>🗄️ El archivador: ¿qué tipo de dato es?</h3><span class="pill" id="sc"></span></div>
+      <div class="prog"><i id="pg"></i></div>
+      <div class="deck">
+        <div class="card-big" id="card"></div>
+        <div class="bins" id="bins"></div>
+      </div>
+      <div class="fb info" id="fb" aria-live="polite"></div>
+      <div class="row" style="justify-content:flex-end"><button class="btn primary" id="nx" hidden>Siguiente tarjeta →</button><button class="btn" id="again" hidden>Volver a jugar</button></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">La prueba del carnet</span>
+    <div class="prose"><p>Ana y Bruno llenaron una ficha. Elige una columna y una operación. Si el resultado tiene sentido, es una <strong>cantidad</strong>. Si no, es una <strong>categoría disfrazada</strong>.</p></div>
+    <div class="bench">
+      <div class="pair">
+        <div class="idc"><span class="nm">Ana</span><div class="f" data-f="edad"><span>Edad</span><b>19</b></div><div class="f" data-f="ci"><span>Carnet</span><b>4 785 120</b></div></div>
+        <div class="idc"><span class="nm">Bruno</span><div class="f" data-f="edad"><span>Edad</span><b>21</b></div><div class="f" data-f="ci"><span>Carnet</span><b>9 312 004</b></div></div>
+      </div>
+      <div class="row" style="justify-content:space-between">
+        <div class="seg" role="group" aria-label="Columna"><button data-col="edad" aria-pressed="true">Edad</button><button data-col="ci" aria-pressed="false">Carnet</button></div>
+        <div class="seg" role="group" aria-label="Operación"><button data-op="sum" aria-pressed="false">Sumar</button><button data-op="avg" aria-pressed="true">Promedio</button><button data-op="cmp" aria-pressed="false">¿Quién tiene más?</button></div>
+      </div>
+      <div class="result mono" id="res"></div>
+      <div class="fb info" id="fb2" aria-live="polite"></div>
+      <p class="muted" style="font-size:14px">Los carnets son inventados para este ejemplo.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Según su estructura</span>
+    <div class="bench">
+      <div class="score"><h3>¿Tabla, semi o libre?</h3><span class="pill" id="sc2"></span></div>
+      <div id="struct"></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ayuda memoria</span>
+    <div class="memo" id="memo">
+      <h3>Cuatro preguntas para clasificar</h3>
+      <ul>
+        <li><span class="key">¿Se cuenta?</span> → numérico <strong>discreto</strong> (hermanos, materias aprobadas)</li>
+        <li><span class="key">¿Se mide?</span> → numérico <strong>continuo</strong> (estatura, tiempo de viaje)</li>
+        <li><span class="key">¿Es una etiqueta?</span> → categórico <strong>nominal</strong> (zona, color de línea)</li>
+        <li><span class="key">¿Etiqueta con orden?</span> → categórico <strong>ordinal</strong> (mala, regular, buena)</li>
+      </ul>
+      <p class="mn">Prueba del carnet: ¿tiene sentido sumarlo o sacar su promedio? Si no, es una categoría disfrazada.</p>
+      <p class="mn">Estructura: tabla fija = estructurado · algo de orden (JSON, HTML) = semi · foto, audio, texto libre = no estructurado.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Lo que acabas de aprender</span>
+    <div class="learn">
+      <div><b>Contar o medir</b><span>Los discretos se cuentan y no tienen decimales. Los continuos se miden y sí los admiten.</span></div>
+      <div><b>Orden o sin orden</b><span>«Regular» está entre «mala» y «buena». «Sopocachi» no está entre nada.</span></div>
+      <div><b>Números que no cuentan</b><span>Si le das un carnet a una red como número normal, buscará relaciones donde no las hay.</span></div>
+    </div>
+    <div class="think"><b>Para pensar</b><p>El número de tu aula, la placa de un minibús y la nota de un examen son números. ¿Cuáles son cantidades de verdad? Aplica la prueba del carnet.</p></div>
+    <dl class="gloss">
+      <div><dt>Dato estructurado</dt><dd>Organizado en filas y columnas con un formato fijo, como una tabla.</dd></div>
+      <div><dt>Dato semiestructurado</dt><dd>Tiene alguna organización, pero no una tabla rígida: JSON, XML, HTML.</dd></div>
+      <div><dt>Dato no estructurado</dt><dd>No sigue ningún esquema previo: textos libres, fotos, audios, videos.</dd></div>
+      <div><dt>Categoría disfrazada</dt><dd>Un número que funciona como etiqueta: carnet, teléfono, código postal.</dd></div>
+    </dl>
+  </section>
+</main>
+<div class="band foot-band"><div class="wrap">
+  <!--NAV-->
+  <footer><span>Ejemplo propio del equipo del libro <em>Redes Neuronales en Mortales</em>, Capítulo I, sección 4.2.</span><span>Funciona en el celular y no guarda ningún dato.</span></footer>
+</div></div>
+<script>/*COMMONJS*/
+const BINS=[["d","🔢 Numérico discreto","Se cuenta"],["c","📏 Numérico continuo","Se mide"],["n","🏷️ Categórico nominal","Etiqueta sin orden"],["o","🪜 Categórico ordinal","Etiqueta con orden"]];
+const DECK=[
+ ["👨‍👩‍👧","Número de hermanos","2","d","Se cuenta: nadie tiene 2,5 hermanos. Es <strong>discreto</strong>."],
+ ["📏","Estatura","1,64 m","c","Se mide y admite decimales: 1,64 o 1,645. Es <strong>continuo</strong>."],
+ ["📍","Zona de residencia","Sopocachi","n","Es una etiqueta sin orden natural: Sopocachi no «va antes» que Miraflores. Es <strong>nominal</strong>."],
+ ["😊","Satisfacción con el servicio","regular","o","Mala, regular, buena tiene orden, pero no sabemos si la distancia entre ellas es la misma. Es <strong>ordinal</strong>."],
+ ["🪪","Número de carnet","6 512 345","n","¡Trampa! Es un número, pero no una cantidad: no tiene sentido sumarlo. Es una categoría disfrazada, <strong>nominal</strong>."],
+ ["⏱️","Tiempo de viaje","37,5 min","c","Se mide con el reloj y admite decimales. Es <strong>continuo</strong>."],
+ ["🚡","Color de línea del teleférico","Morada","n","Una etiqueta sin orden: la Morada no es «más» que la Roja. Es <strong>nominal</strong>."],
+ ["📚","Materias aprobadas","6","d","Se cuentan una por una. Es <strong>discreto</strong>."],
+ ["🎓","Curso","tercero","o","Primero, segundo, tercero tienen orden. Es <strong>ordinal</strong>."],
+ ["📞","Número de teléfono","71 234 567","n","Otra trampa: el teléfono más «alto» no vale más. Es una etiqueta, <strong>nominal</strong>."],
+ ["🌡️","Temperatura en El Alto","8,4 °C","c","Se mide con un termómetro y admite decimales. Es <strong>continuo</strong>."]];
+const STRUCT=[
+ ["📊 La lista del curso con nombre, edad y zona de cada estudiante","e","Filas y columnas con formato fijo: estructurado."],
+ ["🧾 <code>{ \"nombre\": \"Ana\", \"transporte\": [\"teleférico\", \"a pie\"] }</code>","s","Tiene campos, pero otro registro podría no tener «transporte»: semiestructurado."],
+ ["🏔️ Una foto del Illimani","u","Ningún esquema: miles de píxeles. No estructurado."],
+ ["🎙️ La nota de voz de un amigo","u","Audio libre, sin columnas: no estructurado."],
+ ["🌐 Una página web escrita en HTML","s","Tiene etiquetas que la organizan, pero no es una tabla rígida: semiestructurado."],
+ ["🧮 La planilla de notas del curso","e","Cada fila un estudiante, cada columna una nota: estructurado."],
+ ["💬 Un mensaje de WhatsApp","u","Texto libre: no estructurado."]];
+const SN={e:"Estructurado",s:"Semi",u:"No estructurado"};
+const st={order:shuffle(DECK.map((_,i)=>i)),k:0,ok:0,answered:0,lock:false,trapOk:0,col:"edad",op:"avg",ciAvg:false,ciAny:false,sAns:{},sOk:0};
+function card(){const it=DECK[st.order[st.k]];
+  $("card").innerHTML=`<span class="sub">Tarjeta ${st.k+1} de ${DECK.length}</span><div class="rec"><span class="em" aria-hidden="true">${it[0]}</span><div><div class="big">${it[1]}</div><div class="val">${it[2]}</div></div></div>`;
+  $("bins").innerHTML=BINS.map(([id,t,s])=>`<button class="bin" data-b="${id}">${t}<small>${s}</small></button>`).join("");
+  document.querySelectorAll(".bin").forEach(b=>b.onclick=()=>answer(b));
+  $("sc").textContent=`Aciertos: ${st.ok} de ${st.answered}`;$("pg").style.width=(st.answered/DECK.length*100)+"%";
+  $("nx").hidden=true;st.lock=false;}
+function answer(b){if(st.lock)return;st.lock=true;const it=DECK[st.order[st.k]],good=b.dataset.b===it[3];
+  st.answered++;if(good)st.ok++;
+  document.querySelectorAll(".bin").forEach(x=>{x.disabled=true;if(x.dataset.b===it[3])x.classList.add("right");});
+  if(!good)b.classList.add("wrong");
+  const trap=it[1].includes("carnet")||it[1].includes("teléfono");if(trap&&good)st.trapOk++;
+  say($("fb"),good?(trap?"wow":"happy"):"sad",(good?"¡Correcto! ":"Casi. ")+it[4],good?"ok":"bad");
+  $("sc").textContent=`Aciertos: ${st.ok} de ${st.answered}`;$("pg").style.width=(st.answered/DECK.length*100)+"%";
+  if(st.k<DECK.length-1)$("nx").hidden=false;else{$("again").hidden=false;
+    setTimeout(()=>say($("fb"),"wow",`Terminaste el archivador con <strong>${st.ok} de ${DECK.length}</strong> aciertos. ${st.ok>=9?"¡Excelente ojo!":"Revisa la ayuda memoria y vuelve a jugar."}`,"ok"),1400);}
+  G.update(st);}
+$("nx").onclick=()=>{st.k++;card();say($("fb"),"think","¿Se cuenta, se mide, o es una etiqueta?");};
+$("again").onclick=()=>{Object.assign(st,{order:shuffle(DECK.map((_,i)=>i)),k:0,ok:0,answered:0});$("again").hidden=true;card();say($("fb"),"happy","¡Otra vuelta! Las tarjetas salen en otro orden.");};
+/* prueba del carnet */
+const V={edad:[19,21],ci:[4785120,9312004]};
+const nf=n=>n.toLocaleString("es-BO").replace(/\./g," ");
+function carnet(){const a=V[st.col][0],b=V[st.col][1];let r,msg,mood,kind;
+  document.querySelectorAll(".f").forEach(f=>f.classList.toggle("hl",f.dataset.f===st.col));
+  if(st.col==="edad"){
+    if(st.op==="sum"){r=`19 + 21 = 40 años`;msg="Entre los dos suman 40 años de vida. Tiene sentido: la edad es una <strong>cantidad</strong>.";}
+    else if(st.op==="avg"){r=`(19 + 21) ÷ 2 = 20 años`;msg="El promedio de edad es 20 años. Tiene sentido.";}
+    else{r=`21 > 19 → Bruno`;msg="Bruno es mayor que Ana. Comparar edades tiene sentido.";}
+    mood="happy";kind="ok";}
+  else{st.ciAny=true;
+    if(st.op==="sum"){r=`${nf(a)} + ${nf(b)} = ${nf(a+b)}`;msg="¿Qué es un carnet 14 097 124? No es de nadie. <strong>Sumar carnets no tiene sentido.</strong>";}
+    else if(st.op==="avg"){st.ciAvg=true;r=`promedio = ${nf((a+b)/2)}`;msg="¿El carnet promedio del curso es 7 048 562? ¡Ese número no es de ninguna persona! El carnet es una <strong>categoría disfrazada</strong>.";}
+    else{r=`${nf(b)} > ${nf(a)} → ¿Bruno «vale más»?`;msg="Que el número de Bruno sea mayor no dice nada de él. Una red neuronal que recibe carnets como números intentaría encontrar relaciones <strong>donde no las hay</strong>.";}
+    mood="sad";kind="bad";}
+  $("res").textContent=r;say($("fb2"),mood,msg,kind);
+  document.querySelectorAll("[data-col]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.col===st.col));
+  document.querySelectorAll("[data-op]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.op===st.op));
+  G.update(st);}
+document.querySelectorAll("[data-col]").forEach(b=>b.onclick=()=>{st.col=b.dataset.col;carnet();});
+document.querySelectorAll("[data-op]").forEach(b=>b.onclick=()=>{st.op=b.dataset.op;carnet();});
+/* estructura */
+function struct(){$("struct").innerHTML=STRUCT.map(([t,a,w],i)=>{const g=st.sAns[i];
+  return `<div class="srow"><div class="it">${t}</div><div class="row">${["e","s","u"].map(o=>`<button class="opt ${g===undefined?"":o===a?"right":g===o?"wrong":""}" data-i="${i}" data-o="${o}" ${g!==undefined?"disabled":""}>${SN[o]}</button>`).join("")}</div>${g!==undefined?`<span class="why">${g===a?"✓ ":"✗ "}${w}</span>`:""}</div>`;}).join("");
+  st.sOk=Object.entries(st.sAns).filter(([i,g])=>STRUCT[i][1]===g).length;
+  $("sc2").textContent=`${Object.keys(st.sAns).length} de ${STRUCT.length} · aciertos ${st.sOk}`;
+  document.querySelectorAll("#struct .opt").forEach(b=>b.onclick=()=>{st.sAns[b.dataset.i]=b.dataset.o;struct();});
+  G.update(st);}
+const G=Guide($("guide"),{
+ intro:"¡Hola! Soy <strong>Chispa</strong>. Para una red neuronal todo termina siendo números, pero antes alguien tiene que saber qué <strong>tipo</strong> de dato es cada uno. ¿Me ayudas a ordenar el archivador?",
+ missions:[
+  {text:"Clasifica las primeras <strong>5 tarjetas</strong> del archivador.",hint:"Pregúntate: ¿se cuenta?, ¿se mide?, ¿es una etiqueta?, ¿la etiqueta tiene orden?",done:s=>s.answered>=5,ok:"¡Vas bien! Ya viste que no todos los números se comportan igual."},
+  {text:"Termina el mazo completo. Hay <strong>dos trampas</strong> escondidas.",hint:"Busca números que sirvan para identificar a alguien, no para medir algo.",done:s=>s.answered>=DECK.length,ok:s=>s.trapOk===2?"¡Detectaste las dos trampas: carnet y teléfono!":"Las trampas eran el carnet y el teléfono: parecen cantidades, pero son etiquetas."},
+  {text:"Baja a <strong>la prueba del carnet</strong>, elige la columna «Carnet» y calcula el <strong>promedio</strong>.",hint:"Toca «Carnet» y luego «Promedio».",done:s=>s.ciAvg,ok:"Un carnet promedio que no es de nadie: esa es la prueba de que no es una cantidad."},
+  {text:"Clasifica los <strong>7 registros</strong> según su estructura.",hint:"Una tabla fija es estructurada. Si tiene etiquetas o llaves como JSON o HTML, es semi. Fotos, audios y mensajes libres: no estructurados.",done:s=>Object.keys(s.sAns).length>=STRUCT.length,ok:s=>`Lograste ${s.sOk} de ${STRUCT.length}. Las fotos y audios son justo los datos que las redes neuronales aprendieron a manejar mejor.`}],
+ finale:"¡Laboratorio completo! Ya clasificas datos por su <strong>estructura</strong> y por su <strong>naturaleza</strong>, y sabes que un número no siempre es una cantidad."});
+G.onMission=()=>G.update(st);
+card();say($("fb"),"think","¿Se cuenta, se mide, o es una etiqueta?");carnet();struct();
+</script>

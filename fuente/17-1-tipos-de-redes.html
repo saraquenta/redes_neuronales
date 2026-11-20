@@ -1,0 +1,127 @@
+<title>¿Qué red usarías? · Laboratorio 17.1</title>
+<!--HEAD-->
+<style>/*COMMON*/
+:root{--lab:#0369A1;--pattern:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cg fill='none' stroke='%230369A1' stroke-opacity='.14' stroke-width='2'%3E%3Ccircle cx='10' cy='12' r='4'/%3E%3Ccircle cx='38' cy='24' r='4'/%3E%3Ccircle cx='14' cy='38' r='4'/%3E%3Cpath d='M14 13 L34 23 M34 26 L18 36'/%3E%3C/g%3E%3C/svg%3E")}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--lab:#38BDF8}}
+:root[data-theme="dark"]{--lab:#38BDF8}
+.fam{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.fc{font:inherit;text-align:left;background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:14px;box-shadow:3px 3px 0 var(--ink);padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-height:120px}
+.fc .ic{font-size:34px;line-height:1}
+.fc b{font:800 18px var(--f-display);line-height:1.15}
+.fc .s{font-size:14px;color:var(--soft)}
+.fc .more{font-size:14px;line-height:1.4;border-top:1px dashed var(--line);padding-top:6px}
+.fc[aria-expanded="true"]{background:color-mix(in srgb,var(--lab) 9%,var(--card))}
+.q{font:700 20px var(--f-display);line-height:1.25}
+</style>
+<header class="band hero-band">
+  <div class="wrap hero">
+    <div class="hero-text">
+      <span class="book">Redes Neuronales en Mortales · Capítulo II · Sección 17</span>
+      <span class="tag">Laboratorio 17.1</span>
+      <h1>¿Qué red usarías?</h1>
+      <p class="lede">No existe una red neuronal para todo. Una foto, una frase en aymara y la historia del precio de la papa piden formas distintas de mirar. Aquí vas a conocer cinco familias de redes y a elegir la adecuada para problemas reales.</p>
+      <div class="meta"><span>⏱ 6 minutos</span><span>Sin fórmulas</span></div>
+    </div>
+    <div class="art" aria-hidden="true">
+      <svg class="scene" viewBox="0 0 220 190">
+        <g stroke="var(--ink)" stroke-width="3">
+          <rect x="18" y="24" width="56" height="56" rx="8" fill="var(--card)"/><rect x="30" y="36" width="20" height="20" fill="color-mix(in srgb,var(--lab) 50%,var(--card))"/>
+          <rect x="146" y="24" width="56" height="56" rx="8" fill="var(--card)"/>
+          <rect x="18" y="110" width="56" height="56" rx="8" fill="var(--card)"/>
+          <rect x="146" y="110" width="56" height="56" rx="8" fill="var(--card)"/></g>
+        <g fill="var(--lab)"><circle cx="160" cy="52" r="5"/><circle cx="174" cy="52" r="5"/><circle cx="188" cy="52" r="5"/></g>
+        <path d="M156 66 Q174 40 192 66" fill="none" stroke="var(--ink)" stroke-width="2"/>
+        <g font-family="JetBrains Mono,monospace" font-size="12" font-weight="800" fill="var(--ink)" text-anchor="middle"><text x="46" y="144">x→y</text><text x="174" y="144">✨</text></g>
+        <path d="M30 128 h32 M30 138 h32 M30 148 h32" stroke="var(--lab)" stroke-width="3"/>
+        <circle cx="110" cy="95" r="22" fill="var(--lab)" stroke="var(--ink)" stroke-width="3"/>
+        <path d="M74 52 L92 82 M146 52 L128 82 M74 138 L92 108 M146 138 L128 108" stroke="var(--ink)" stroke-width="2"/>
+      </svg>
+      <div data-chispa="happy" class="chispa-mini"></div>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="sec">
+    <span class="kicker">Primero, la idea: cinco familias</span>
+    <p>Toca cada tarjeta para saber cómo «mira» cada familia de redes.</p>
+    <div class="fam" id="fam"></div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ahora, pruébalo</span>
+    <div id="guide"></div>
+    <div class="bench">
+      <div class="row" style="justify-content:space-between"><h3>¿Qué red usarías?</h3><span class="pill" id="sc"></span></div>
+      <div class="prog"><i id="pg"></i></div>
+      <p class="q" id="qt"></p>
+      <div class="opts" id="qo"></div>
+      <div class="fb info" id="fb" aria-live="polite"></div>
+      <div class="row" style="justify-content:flex-end"><button class="btn primary" id="nx" hidden>Siguiente →</button></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ayuda memoria</span>
+    <div class="memo" id="memo">
+      <h3>Elige la red por la forma del dato</h3>
+      <ul>
+        <li><span class="key">Tabla</span> (filas y columnas) → red densa</li>
+        <li><span class="key">Imagen</span> (píxeles vecinos) → convolucional</li>
+        <li><span class="key">Secuencia corta</span> (orden en el tiempo) → recurrente</li>
+        <li><span class="key">Lenguaje o secuencias largas</span> → transformer</li>
+        <li><span class="key">Crear algo nuevo</span> → generativa</li>
+      </ul>
+      <p class="mn">Primero pregúntate: ¿qué forma tienen mis datos? ¿Importa el orden? ¿Importan los vecinos?</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Lo que acabas de aprender</span>
+    <div class="learn">
+      <div><b>La forma del dato manda</b><span>Una red que respeta la forma de los datos aprende más con menos.</span></div>
+      <div><b>Las familias se mezclan</b><span>Muchos sistemas reales combinan varias: ver una foto y describirla en palabras.</span></div>
+      <div><b>Todas son neuronas</b><span>Debajo de cada familia siguen estando los nodos de la sección 10: sumar, pesar y activar.</span></div>
+    </div>
+    <div class="think"><b>Para pensar</b><p>Quieres una aplicación que escuche a una persona hablar en quechua y le responda por escrito en castellano. ¿Qué familias de redes necesitarías combinar?</p></div>
+  </section>
+</main>
+<div class="band foot-band"><div class="wrap">
+  <!--NAV-->
+  <footer><span>Ejemplo propio del equipo del libro <em>Redes Neuronales en Mortales</em>, Capítulo II, sección 17.1.</span><span>Funciona en el celular y no guarda ningún dato.</span></footer>
+</div></div>
+<script>/*COMMONJS*/
+const F=[["🧮","Red densa","Para tablas","Cada neurona mira todas las columnas a la vez. Ideal cuando los datos son filas y columnas sin un orden especial: edad, distancia, ingresos. Es la red que armamos en las secciones 10 a 12."],
+ ["🖼️","Convolucional","Para imágenes","Recorre la imagen con pequeñas ventanas, como una lupa que busca bordes, manchas y texturas en cualquier parte de la foto. Respeta que los píxeles vecinos van juntos."],
+ ["🔁","Recurrente","Para secuencias","Lee los datos uno tras otro y guarda una memoria de lo que ya vio. Útil cuando el orden importa: el precio de cada semana, la lluvia de cada día."],
+ ["🎯","Transformer","Para lenguaje","Mira toda la secuencia a la vez y decide a qué partes prestar atención. Es la base de los modelos de lenguaje como los de la sección 2.3."],
+ ["✨","Generativa","Para crear","No clasifica: produce algo nuevo que se parece a lo que aprendió, como una imagen o un texto. Hay varias técnicas, como las GAN y los modelos de difusión."]];
+const Q=[["Una cooperativa quiere detectar el tizón en fotos de hojas de papa tomadas con el celular.",1,"Es una imagen: las manchas importan por cómo se agrupan los píxeles vecinos. Convolucional."],
+ ["Un banco quiere estimar el riesgo de un crédito con edad, ingresos, deudas y años de trabajo.",0,"Son columnas de una tabla, sin orden ni vecindad: una red densa basta."],
+ ["Un traductor que pase frases del castellano al aymara.",3,"Lenguaje: cada palabra depende de otras, a veces lejanas en la frase. Los traductores modernos usan transformers."],
+ ["Predecir la lluvia de mañana en El Alto a partir de las lecturas de los últimos 30 días.",2,"Una secuencia en el tiempo donde el orden importa. Una recurrente es una buena opción, aunque hoy también se usan transformers."],
+ ["Crear diseños nuevos de aguayo a partir de miles de fotos de aguayos tradicionales.",4,"No se trata de clasificar, sino de producir algo nuevo: una red generativa. Y con cuidado: los diseños tradicionales tienen autoría colectiva."],
+ ["Reconocer el número de placa de un minibús en una foto de la Autopista.",1,"Encontrar letras y números dentro de una foto empieza por mirar la imagen: convolucional."],
+ ["Un asistente que responda preguntas sobre el reglamento de la universidad.",3,"Entender y producir lenguaje: transformer, como los modelos de la sección 2.3."],
+ ["Estimar el tiempo de viaje de un estudiante con su zona, transporte y hora de salida (sección 5).",0,"Es la tabla del transporte: filas y columnas. Red densa."]];
+const st={open:new Set(),order:shuffle(Q.map((_,i)=>i)),i:0,ok:0,ans:0,lock:false};
+function fam(){$("fam").innerHTML=F.map(([ic,n,s,m],i)=>{const o=st.open.has(i);return `<button class="fc" data-i="${i}" aria-expanded="${o}"><span class="ic" aria-hidden="true">${ic}</span><b>${n}</b><span class="s">${s}</span>${o?`<span class="more">${m}</span>`:""}</button>`;}).join("");
+  document.querySelectorAll(".fc").forEach(b=>b.onclick=()=>{const i=+b.dataset.i;st.open.has(i)?st.open.delete(i):st.open.add(i);fam();G.update(st);});}
+function q(){const it=Q[st.order[st.i]];$("qt").textContent=it[0];st.lock=false;$("nx").hidden=true;
+  $("qo").innerHTML=F.map(([ic,n],k)=>`<button class="opt" data-k="${k}"><span class="ic">${ic}</span>${n}</button>`).join("");
+  document.querySelectorAll("#qo .opt").forEach(b=>b.onclick=()=>a(b));$("sc").textContent=`${st.ok} de ${st.ans}`;$("pg").style.width=(st.ans/Q.length*100)+"%";}
+function a(b){if(st.lock)return;st.lock=true;const it=Q[st.order[st.i]],good=+b.dataset.k===it[1];st.ans++;if(good)st.ok++;
+  document.querySelectorAll("#qo .opt").forEach(x=>{x.disabled=true;if(+x.dataset.k===it[1])x.classList.add("right");});if(!good)b.classList.add("wrong");
+  say($("fb"),good?"happy":"sad",(good?"¡Bien elegida! ":"Esta vez no. ")+it[2],good?"ok":"bad");
+  $("sc").textContent=`${st.ok} de ${st.ans}`;$("pg").style.width=(st.ans/Q.length*100)+"%";
+  if(st.i<Q.length-1)$("nx").hidden=false;else setTimeout(()=>say($("fb"),"wow",`Terminaste con <strong>${st.ok} de ${Q.length}</strong>. La pregunta clave siempre es la misma: ¿qué forma tienen mis datos?`,"ok"),1300);G.update(st);}
+$("nx").onclick=()=>{st.i++;q();say($("fb"),"think","Fíjate en la forma de los datos: ¿tabla, imagen, secuencia, lenguaje o crear algo nuevo?");};
+const G=Guide($("guide"),{
+ intro:"¡Hola! Soy <strong>Chispa</strong>. Las redes neuronales tienen familias, como las herramientas de un taller: no usas un martillo para cortar madera. Vamos a conocerlas.",
+ missions:[
+  {text:"Toca las <strong>5 tarjetas</strong> de las familias de redes.",hint:"Están arriba, en «Primero, la idea».",done:s=>s.open.size>=5,ok:"Ya conoces las cinco familias. Ahora a elegir."},
+  {text:"Responde al menos <strong>5 casos</strong> de «¿Qué red usarías?».",hint:"Pregúntate: ¿es una tabla, una imagen, una secuencia, lenguaje o crear algo nuevo?",done:s=>s.ans>=5,ok:s=>`Llevas ${s.ok} de ${s.ans}.`},
+  {text:"Termina los <strong>8 casos</strong>.",hint:"Sigue con «Siguiente».",done:s=>s.ans>=Q.length,ok:s=>`Terminaste con ${s.ok} de ${Q.length}.`}],
+ finale:"¡Laboratorio completo! Para elegir una red, primero mira la <strong>forma de tus datos</strong>. Debajo, todas siguen siendo neuronas que suman, pesan y activan."});
+G.onMission=()=>G.update(st);
+fam();q();say($("fb"),"think","Lee el caso y elige la familia de red que mejor le queda.");
+</script>

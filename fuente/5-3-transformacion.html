@@ -1,0 +1,208 @@
+<title>Convierte palabras en números · Laboratorio 5.3</title>
+<!--HEAD-->
+<style>/*COMMON*/
+:root{--lab:#1D4ED8;--pattern:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24'%3E%3Ctext x='3' y='16' font-family='monospace' font-size='12' fill='%231D4ED8' fill-opacity='.14'%3E0 1%3C/text%3E%3C/svg%3E")}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--lab:#82A6FF}}
+:root[data-theme="dark"]{--lab:#82A6FF}
+.trap{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:520px){.trap{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tk{background:var(--paper);border-radius:12px;padding:10px;text-align:center;border:2px solid var(--line)}
+.tk .em{font-size:30px;line-height:1.1} .tk b{display:block;font:800 26px var(--f-mono);color:var(--lab)} .tk span{font-size:14px}
+.oh{display:flex;flex-direction:column;gap:10px}
+.ohrow{display:grid;grid-template-columns:150px repeat(4,minmax(0,1fr));gap:6px;align-items:center}
+@media (max-width:560px){.ohrow{grid-template-columns:96px repeat(4,minmax(0,1fr))}}
+.ohrow .who{font-size:15px;line-height:1.2}
+.ohrow .who b{display:block;font-family:var(--f-mono);font-size:13px;color:var(--soft)}
+.ohh .e{font-size:20px}
+@media (max-width:560px){.ohh .t{display:none}}
+.ohh{font:700 11px var(--f-mono);text-transform:uppercase;letter-spacing:.03em;color:var(--soft);text-align:center;word-break:break-word}
+.bulb{font:800 20px var(--f-mono);height:50px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--soft);cursor:pointer;transition:all .15s}
+.bulb[aria-pressed="true"]{background:var(--spark);border-color:var(--spark);color:#2A1A00;box-shadow:0 0 0 4px var(--spark-soft)}
+.ohrow.good .bulb[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff;box-shadow:0 0 0 4px var(--ok-soft)}
+.ohrow .st{grid-column:2 / -1;font-size:13px;color:var(--soft)}
+.dist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.dist{grid-template-columns:1fr}}
+.dist .card-big .big{font-size:26px}
+.line{width:100%;display:block}
+.calc{font:500 16px var(--f-mono);background:var(--paper);border-radius:12px;padding:12px;line-height:1.8;overflow-x:auto}
+.calc b{color:var(--lab)}
+.final td{font-family:var(--f-mono)}
+.final td.one{color:var(--ok);font-weight:700}
+.sw2{display:flex;align-items:center;gap:10px;font-weight:700;cursor:pointer}
+.sw2 input{width:22px;height:22px;accent-color:var(--lab)}
+</style>
+<header class="band hero-band">
+  <div class="wrap hero">
+    <div class="hero-text">
+      <span class="book">Redes Neuronales en Mortales · Capítulo I · Sección 5</span>
+      <span class="tag">Laboratorio 5.3</span>
+      <h1>Convierte palabras en números</h1>
+      <p class="lede">Una red neuronal solo sabe hacer una cosa: operar con números. No entiende la palabra «Teleférico». Aquí vas a convertir los medios de transporte con one-hot y a escalar los tiempos de viaje entre 0 y 1.</p>
+      <div class="meta"><span>⏱ 7 minutos</span><span>Una resta y una división, nada más</span></div>
+    </div>
+    <div class="art" aria-hidden="true">
+      <svg class="scene" viewBox="0 0 220 190">
+        <g stroke="var(--ink)" stroke-width="3">
+          <rect x="14" y="30" width="44" height="62" rx="10" fill="var(--card)"/><rect x="64" y="30" width="44" height="62" rx="10" fill="var(--spark)"/><rect x="114" y="30" width="44" height="62" rx="10" fill="var(--card)"/><rect x="164" y="30" width="44" height="62" rx="10" fill="var(--card)"/></g>
+        <g font-family="JetBrains Mono,monospace" font-size="24" font-weight="800" text-anchor="middle" fill="var(--ink)"><text x="36" y="70">0</text><text x="86" y="70">1</text><text x="136" y="70">0</text><text x="186" y="70">0</text></g>
+        <g font-size="18" text-anchor="middle"><text x="36" y="22">🚡</text><text x="86" y="22">🚐</text><text x="136" y="22">🚶</text><text x="186" y="22">🚌</text></g>
+        <rect x="14" y="122" width="194" height="34" rx="6" fill="color-mix(in srgb,var(--lab) 25%,var(--card))" stroke="var(--ink)" stroke-width="3"/>
+        <g stroke="var(--ink)" stroke-width="2"><path d="M24 122v12M62 122v8M100 122v12M138 122v8M176 122v8M198 122v12"/></g>
+        <g font-family="JetBrains Mono,monospace" font-size="11" font-weight="700" fill="var(--ink)" text-anchor="middle"><text x="24" y="176">0</text><text x="198" y="176">1</text><text x="110" y="150">mín → máx</text></g>
+      </svg>
+      <div data-chispa="happy" class="chispa-mini"></div>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="sec">
+    <span class="kicker">Primero, la idea</span>
+    <div class="strip">
+      <div class="panel"><span class="n">1</span><span class="pic" aria-hidden="true">✍️</span><p><strong>Texto → tokens.</strong> Cada fragmento de palabra recibe un número: «tele» podría ser el 4 521.</p></div>
+      <div class="panel"><span class="n">2</span><span class="pic" aria-hidden="true">🖼️</span><p><strong>Imagen → píxeles.</strong> Una imagen de 28 × 28 en blanco y negro son 784 números entre 0 y 255.</p></div>
+      <div class="panel"><span class="n">3</span><span class="pic" aria-hidden="true">🚡</span><p><strong>Categorías → ¿?</strong> «Teleférico», «Minibús», «A pie», «Micro». Aquí está la trampa. Veámosla.</p></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ahora, pruébalo</span>
+    <div id="guide"></div>
+    <div class="bench">
+      <h3>1 · La trampa del 1, 2, 3, 4</h3>
+      <p>La primera idea es poner un número a cada medio de transporte:</p>
+      <div class="trap"><div class="tk"><div class="em">🚡</div><b>1</b><span>Teleférico</span></div><div class="tk"><div class="em">🚐</div><b>2</b><span>Minibús</span></div><div class="tk"><div class="em">🚶</div><b>3</b><span>A pie</span></div><div class="tk"><div class="em">🚌</div><b>4</b><span>Micro</span></div></div>
+      <p>Pero la red <strong>sí</strong> hace cuentas con esos números. Pregúntale algo:</p>
+      <div class="opts" id="trapq">
+        <button class="opt" data-q="0">¿Cuánto es Micro ÷ Teleférico?</button>
+        <button class="opt" data-q="1">¿Qué hay entre Teleférico y Micro?</button>
+        <button class="opt" data-q="2">¿Qué está más cerca del Teleférico?</button>
+      </div>
+      <div class="fb info" id="fbt" aria-live="polite"></div>
+    </div>
+
+    <div class="bench">
+      <h3>2 · Enciende un solo foco: one-hot</h3>
+      <p>La solución: una columna por categoría y un <strong>1</strong> solo en la que corresponde. Como una neurona activa, solo una «se enciende». Toca los focos para armar cada fila.</p>
+      <div class="oh" id="oh"></div>
+      <div class="fb info" id="fbo" aria-live="polite"></div>
+      <div class="dist" id="dist" hidden></div>
+    </div>
+
+    <div class="bench">
+      <h3>3 · Escala los tiempos entre 0 y 1</h3>
+      <p>Si una entrada va de 18 a 25 y otra de 900 a 10 800, la grande domina la suma y entrenar se vuelve lento e inestable. La <button class="term" data-def="Técnica que lleva los valores de una variable al rango entre 0 y 1: se resta el mínimo y se divide entre el rango (máximo − mínimo).">normalización mín-máx</button> lleva todo al rango de 0 a 1:</p>
+      <div class="calc" style="text-align:center"><b>nuevo valor</b> = (valor − mínimo) ÷ (máximo − mínimo)</div>
+      <label class="sw2"><input type="checkbox" id="w180" checked> Incluir el viaje de 180 minutos (el día del bloqueo)</label>
+      <svg class="line" id="line" viewBox="0 0 600 170" role="img" aria-label="Recta de 0 a 1 con los tiempos escalados"></svg>
+      <div class="row" id="pick"></div>
+      <div class="calc" id="calc" aria-live="polite"></div>
+      <div id="quiz"></div>
+      <div class="fb info" id="fbs" aria-live="polite"></div>
+    </div>
+
+    <div class="bench" id="finalbox" hidden>
+      <h3>🎉 Así quedan las filas, listas para la red</h3>
+      <div class="tablewrap"><table class="final" id="final"></table></div>
+      <p class="muted" style="font-size:15px">Ahora sí: una tabla de puros números. Es la misma que aparece en el libro.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ayuda memoria</span>
+    <div class="memo" id="memo">
+      <h3>¿Cómo convierto cada dato?</h3>
+      <ul>
+        <li><span class="key">Categoría sin orden</span> (transporte, zona) → <strong>one-hot</strong>: una columna por categoría, un solo 1.</li>
+        <li><span class="key">Categoría con orden</span> (mala, regular, buena) → 1, 2, 3 sí sirve, porque el orden es real.</li>
+        <li><span class="key">Números</span> → escala de 0 a 1.</li>
+      </ul>
+      <p class="mn">(valor − mín) ÷ (máx − mín)<br>el mínimo da 0 · el máximo da 1</p>
+      <p class="mn">Ojo: un solo valor extremo aplasta la escala. Y el mínimo y el máximo se calculan solo con los datos de entrenamiento, o habrá fuga de datos.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Lo que acabas de aprender</span>
+    <div class="learn">
+      <div><b>No inventes un orden</b><span>Con 1, 2, 3, 4 la red cree que el Micro es «cuatro veces» el Teleférico.</span></div>
+      <div><b>Un solo caliente</b><span>One-hot pone a todas las categorías a la misma distancia unas de otras.</span></div>
+      <div><b>Ninguno domina</b><span>Escalar evita que un número grande se coma a los pequeños. Por eso la limpieza va antes.</span></div>
+    </div>
+    <div class="think"><b>Para pensar</b><p>De la fecha de cada viaje podrías sacar el día de la semana: ¿los lunes hay más tráfico? Inventar variables útiles se llama <strong>ingeniería de características</strong>. ¿Qué otra columna nueva le agregarías a esta tabla?</p></div>
+    <dl class="gloss">
+      <div><dt>Codificación one-hot</dt><dd>Convierte una categoría en columnas de ceros y unos, con un 1 solo en la que corresponde.</dd></div>
+      <div><dt>Normalización mín-máx</dt><dd>Escalado que lleva los valores al rango entre 0 y 1.</dd></div>
+      <div><dt>Tokenización</dt><dd>Conversión de un texto en fragmentos (tokens) a los que se asigna un número.</dd></div>
+      <div><dt>Fuga de datos</dt><dd>Información de los datos de prueba que se filtra al entrenamiento y da resultados falsamente buenos.</dd></div>
+    </dl>
+  </section>
+</main>
+<div class="band foot-band"><div class="wrap">
+  <!--NAV-->
+  <footer><span>Datos del ejemplo del libro <em>Redes Neuronales en Mortales</em>, Capítulo I, sección 5.3.</span><span>Funciona en el celular y no guarda ningún dato.</span></footer>
+</div></div>
+<script>/*COMMONJS*/
+const T=["Teleférico","Minibús","A pie","Micro"],EM=["🚡","🚐","🚶","🚌"];
+const ROWS=[{id:1,t:0,min:25},{id:2,t:1,min:50},{id:4,t:2,min:15},{id:7,t:3,min:180}];
+const st={trap:new Set(),bulbs:ROWS.map(()=>[0,0,0,0]),ohOk:0,a:0,b:3,with180:true,sel:25,quizOk:false,toggled:false};
+const TRAP=["Micro ÷ Teleférico = 4 ÷ 1 = <strong>4</strong>. Para la red, el Micro vale cuatro veces el Teleférico. ¡No tiene sentido!",
+ "(1 + 4) ÷ 2 = <strong>2,5</strong>, justo entre Minibús y A pie. La red cree que «A pie» está a mitad de camino entre el Teleférico y el Micro. ¡Un orden que no existe!",
+ "Minibús (2) está a 1 de distancia y Micro (4) a 3. ¿Por qué el Minibús se «parecería» más al Teleférico? Solo porque le tocó el número 2."];
+document.querySelectorAll("#trapq .opt").forEach(b=>b.onclick=()=>{st.trap.add(+b.dataset.q);b.classList.add("sel");say($("fbt"),"sad",TRAP[+b.dataset.q]+(st.trap.size>=2?" Estamos <strong>inventando un orden</strong>. Necesitamos otra forma.":""),"bad");G.update(st);});
+function oh(){let h=`<div class="ohrow"><span></span>${T.map((t,i)=>`<span class="ohh"><span class="e">${EM[i]}</span> <span class="t">${t}</span></span>`).join("")}</div>`;
+  ROWS.forEach((r,i)=>{const b=st.bulbs[i],on=b.reduce((x,y)=>x+y),good=on===1&&b[r.t]===1;
+    h+=`<div class="ohrow ${good?"good":""}"><span class="who"><b>id ${r.id}</b>${EM[r.t]} ${T[r.t]}</span>${b.map((v,j)=>`<button class="bulb" data-i="${i}" data-j="${j}" aria-pressed="${v===1}" aria-label="${T[r.t]}, columna ${T[j]}: ${v}">${v}</button>`).join("")}<span class="st">${good?"✓ un solo foco, en su columna":on>1?"⚠ hay más de un foco encendido":on===1?"✗ ese foco no corresponde":"todo apagado"}</span></div>`;});
+  $("oh").innerHTML=h;st.ohOk=ROWS.filter((r,i)=>st.bulbs[i].reduce((x,y)=>x+y)===1&&st.bulbs[i][r.t]===1).length;
+  document.querySelectorAll(".bulb").forEach(b=>b.onclick=()=>{const i=+b.dataset.i,j=+b.dataset.j;st.bulbs[i][j]^=1;bulbFb(i,j);oh();});
+  $("dist").hidden=st.ohOk<4;if(st.ohOk===4)dist();finalT();G.update(st);}
+function bulbFb(i,j){const r=ROWS[i],b=st.bulbs[i],on=b.reduce((x,y)=>x+y);
+  if(on>1)say($("fbo"),"sad","Solo puede haber <strong>un</strong> foco encendido por fila: por eso se llama «un solo caliente».","bad");
+  else if(on===1&&b[r.t]===1)say($("fbo"),st.ohOk>=3?"wow":"happy",st.ohOk>=3?"¡Las cuatro filas listas! Abajo puedes comparar distancias.":`¡Bien! ${T[r.t]} se escribe con un 1 solo en su columna.`,"ok");
+  else if(on===1)say($("fbo"),"think",`Esta fila es de alguien que viaja en <strong>${T[r.t]}</strong>. Enciende esa columna.`);
+  else say($("fbo"),"think","Fila apagada. Enciende la columna de su medio de transporte.");}
+function dist(){const a=st.a,b=st.b,d1=Math.abs((a+1)-(b+1)),d2=a===b?0:Math.SQRT2;
+  $("dist").innerHTML=`<div style="grid-column:1/-1" class="row"><span class="sub">Compara la distancia entre</span><select id="da" class="btn">${T.map((t,i)=>`<option value="${i}" ${i===a?"selected":""}>${t}</option>`).join("")}</select><span>y</span><select id="db" class="btn">${T.map((t,i)=>`<option value="${i}" ${i===b?"selected":""}>${t}</option>`).join("")}</select></div>
+  <div class="card-big"><span class="sub">Con 1, 2, 3, 4</span><span class="big">${d1}</span><span class="muted" style="font-size:15px">${d1>1?"Parecen muy distintos solo por el número que les tocó.":d1===1?"Parecen vecinos solo por el número que les tocó.":"Es la misma categoría."}</span></div>
+  <div class="card-big"><span class="sub">Con one-hot</span><span class="big">${a===b?"0":"≈ 1,41"}</span><span class="muted" style="font-size:15px">${a===b?"Es la misma categoría.":"Siempre la misma (√2): ninguna categoría está «más cerca» que otra."}</span></div>`;
+  $("da").onchange=e=>{st.a=+e.target.value;dist();};$("db").onchange=e=>{st.b=+e.target.value;dist();};}
+/* escalado */
+const times=()=>ROWS.filter(r=>st.with180||r.min!==180).map(r=>r.min);
+const sc=v=>{const t=times(),mn=Math.min(...t),mx=Math.max(...t);return (v-mn)/(mx-mn);};
+const c2=x=>fmt(x,2);
+function line(){if(!times().includes(st.sel))st.sel=times()[0];const t=times(),mn=Math.min(...t),mx=Math.max(...t),X=v=>40+520*v,c=tok;
+  let g=`<line x1="40" y1="70" x2="560" y2="70" stroke="${c('--ink')}" stroke-width="3"/>`;
+  for(let k=0;k<=10;k++)g+=`<line x1="${X(k/10)}" x2="${X(k/10)}" y1="64" y2="${k%5?76:80}" stroke="${c('--ink')}" stroke-width="2"/>`;
+  g+=`<text x="40" y="100" text-anchor="middle" font-size="16" font-weight="700" fill="${c('--ink')}">0</text><text x="560" y="100" text-anchor="middle" font-size="16" font-weight="700" fill="${c('--ink')}">1</text><text x="300" y="100" text-anchor="middle" font-size="13" fill="${c('--soft')}">0,5</text>`;
+  const used=[];
+  ROWS.filter(r=>st.with180||r.min!==180).forEach(r=>{const v=sc(r.min),x=X(v);let lvl=0;while(used.some(u=>u.l===lvl&&Math.abs(u.x-x)<70))lvl++;used.push({x,l:lvl});
+    const sel=r.min===st.sel,y=40-lvl*22;
+    g+=`<circle cx="${x}" cy="70" r="${sel?11:8}" fill="${sel?c('--lab'):c('--spark')}" stroke="${c('--ink')}" stroke-width="2"/>`;
+    g+=`<text x="${x}" y="${y}" text-anchor="middle" font-size="14" font-weight="700" fill="${c('--ink')}">${r.min} min → ${c2(v)}</text>`;});
+  g+=`<text x="300" y="140" text-anchor="middle" font-size="14" fill="${c('--soft')}">mínimo = ${mn} · máximo = ${mx} · rango = ${mx-mn}</text>`;
+  $("line").innerHTML=g;
+  $("pick").innerHTML=`<span class="sub">Calcula:</span>`+ROWS.filter(r=>st.with180||r.min!==180).map(r=>`<button class="btn ${r.min===st.sel?"primary":""}" data-m="${r.min}">${EM[r.t]} ${r.min} min</button>`).join("");
+  document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{st.sel=+b.dataset.m;line();});
+  const v=st.sel;$("calc").innerHTML=`(${v} − <b>${mn}</b>) ÷ (<b>${mx}</b> − <b>${mn}</b>) = ${v-mn} ÷ ${mx-mn} = <b>${c2((v-mn)/(mx-mn))}</b>`;
+  finalT();G.update(st);}
+$("w180").onchange=e=>{st.with180=e.target.checked;st.toggled=true;
+  if(!st.with180)say($("fbs"),"wow","Sin el 180, el máximo es 50 y los tiempos se reparten por toda la recta: 25 pasa a <strong>0,29</strong>. Con el 180 estaban amontonados cerca de 0. ¡Un solo valor extremo aplastaba la escala!","ok");
+  else say($("fbs"),"think","Con el 180, el máximo sube y 15, 25 y 50 quedan amontonados cerca de 0 (0,00 · 0,06 · 0,21). Por eso la limpieza y el análisis exploratorio van antes de transformar.");
+  line();};
+function quiz(){if(st.quizOk){$("quiz").innerHTML="";return;}
+  $("quiz").innerHTML=`<p><strong>Reto:</strong> con 15, 25, 50 y 180 minutos, ¿en cuánto queda el viaje de <strong>25 minutos</strong>?</p><div class="opts">${shuffle([["0,06",1],["0,25",0],["0,14",0],["0,50",0]]).map(([t,ok])=>`<button class="opt" data-ok="${ok}">${t}</button>`).join("")}</div>`;
+  $("quiz").querySelectorAll(".opt").forEach(b=>b.onclick=()=>{if(b.dataset.ok==="1"){st.quizOk=true;b.classList.add("right");say($("fbs"),"happy","¡Exacto! (25 − 15) ÷ (180 − 15) = 10 ÷ 165 ≈ <strong>0,06</strong>. Ahora quita el 180 con la casilla de arriba y mira qué pasa.","ok");setTimeout(quiz,1800);finalT();G.update(st);}
+    else{b.classList.add("wrong");b.disabled=true;say($("fbs"),"sad","Casi. Resta primero el mínimo (15) y divide entre el rango: 180 − 15 = 165. Usa los botones de «Calcula» para verlo paso a paso.","bad");}});}
+function finalT(){const show=st.ohOk===4&&st.quizOk;$("finalbox").hidden=!show;if(!show)return;
+  const mn=15,mx=180;$("final").innerHTML=`<thead><tr><th>id</th>${T.map(t=>`<th>${t}</th>`).join("")}<th>tiempo (escalado)</th></tr></thead><tbody>`+ROWS.map(r=>`<tr><td>${r.id}</td>${T.map((_,j)=>`<td class="${j===r.t?"one":""}">${j===r.t?1:0}</td>`).join("")}<td>${c2((r.min-mn)/(mx-mn))}</td></tr>`).join("")+"</tbody>";}
+const G=Guide($("guide"),{
+ intro:"¡Hola! Soy <strong>Chispa</strong> y solo entiendo números. Si me dices «Teleférico», no sé qué hacer. ¿Me ayudas a traducir la tabla limpia del Laboratorio 5.2 a mi idioma?",
+ missions:[
+  {text:"En la parte 1, hazle a la red <strong>dos preguntas</strong> sobre el 1, 2, 3, 4.",hint:"Toca dos de los tres botones de preguntas.",done:s=>s.trap.size>=2,ok:"Viste la trampa: con 1, 2, 3, 4 inventamos un orden que no existe."},
+  {text:"En la parte 2, arma las <strong>4 filas one-hot</strong>: un solo foco encendido por fila, en su columna.",hint:"Cada fila dice su transporte a la izquierda. Enciende solo ese foco.",done:s=>s.ohOk>=4,ok:"¡Todas las categorías a la misma distancia! Compara las distancias en el recuadro que apareció."},
+  {text:"En la parte 3, resuelve el <strong>reto del viaje de 25 minutos</strong>.",hint:"Mínimo 15, máximo 180. (25 − 15) ÷ (180 − 15).",done:s=>s.quizOk,ok:"Ya sabes escalar a mano. Así lo hace la computadora con miles de filas."},
+  {text:"Desmarca <strong>«Incluir el viaje de 180 minutos»</strong> y observa la recta.",hint:"Es la casilla que está sobre la recta de 0 a 1.",done:s=>s.toggled&&!s.with180,ok:"Un solo valor extremo puede aplastar la escala de todo el resto. Vuelve a marcarla si quieres comparar."}],
+ finale:"¡Laboratorio completo! Convertiste categorías con <strong>one-hot</strong> y escalaste números entre <strong>0 y 1</strong>. Ahora sí, una tabla de puros números, lista para alimentar una red neuronal."});
+G.onMission=()=>G.update(st);
+oh();line();quiz();say($("fbt"),"think","Elige una pregunta y mira qué responde la red.");say($("fbo"),"think","Toca un foco para encenderlo o apagarlo.");say($("fbs"),"think","Toca un tiempo para ver el cálculo paso a paso.");
+onTheme(line);
+</script>

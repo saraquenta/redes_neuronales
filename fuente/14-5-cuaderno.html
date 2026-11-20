@@ -1,0 +1,74 @@
+<title>Lee números escritos a mano · Laboratorio 14.5</title>
+<!--HEAD-->
+<style>/*COMMON*/
+:root{--lab:#7C3AED;--pattern:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cellipse cx='22' cy='24' rx='8' ry='12' fill='none' stroke='%237C3AED' stroke-opacity='.15' stroke-width='2'/%3E%3C/svg%3E")}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--lab:#C4B5FD}}
+:root[data-theme="dark"]{--lab:#C4B5FD}
+.go{font:800 20px var(--f-display);text-decoration:none;display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:14px;background:var(--lab);color:var(--card);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
+.go:hover{transform:translate(-1px,-1px)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps div{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:12px;box-shadow:3px 3px 0 var(--ink);font-size:15px}
+.steps b{display:block;font:800 17px var(--f-display);color:var(--lab)}
+</style>
+<header class="band hero-band">
+  <div class="wrap hero">
+    <div class="hero-text">
+      <span class="book">Redes Neuronales en Mortales · Capítulo II · Sección 14</span>
+      <span class="tag">Laboratorio 14.5</span>
+      <h1>Una red que lee números escritos a mano</h1>
+      <p class="lede">Una cooperativa quinuera guarda años de planillas escritas a mano. En un cuaderno de Google Colab vas a usar una red ya entrenada como en la vida real: guardarla, cargarla, pedirle respuestas, leer su confianza y decidir cuándo creerle.</p>
+      <div class="meta"><span>⏱ 15 minutos</span><span>Necesitas una cuenta de Google. No hay que instalar nada.</span></div>
+    </div>
+    <div class="art" aria-hidden="true">
+      <svg class="scene" viewBox="0 0 220 190">
+        <rect x="30" y="20" width="160" height="150" rx="8" fill="#FFF8E1" stroke="var(--ink)" stroke-width="3"/>
+        <g stroke="#C9B66A" stroke-width="1.5"><path d="M40 52 H180 M40 82 H180 M40 112 H180 M40 142 H180"/><path d="M110 30 V160"/></g>
+        <g font-family="Comic Sans MS,cursive" font-size="22" fill="#1E3A8A"><text x="52" y="76">Mamani</text><text x="124" y="76">12</text><text x="52" y="106">Quispe</text><text x="124" y="106">7</text><text x="52" y="136">Condori</text><text x="124" y="136">35</text></g>
+        <rect x="118" y="88" width="40" height="26" fill="none" stroke="var(--lab)" stroke-width="3" stroke-dasharray="5 4"/>
+      </svg>
+      <div data-chispa="happy" class="chispa-mini"></div>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="sec">
+    <span class="kicker">Abre el cuaderno</span>
+    <div class="bench" style="align-items:flex-start">
+      <p>El cuaderno se abre en Google Colab. Ejecuta cada celda en orden con el botón ▶. Si te pide iniciar sesión, usa tu cuenta de Google.</p>
+      <a class="go" href="https://colab.research.google.com/github/jayutomas623/redes-neuronales/blob/main/cuadernos/14-5-digitos.ipynb" target="_blank" rel="noopener">▶ Abrir en Google Colab</a>
+      <p class="muted" style="font-size:15px">¿Prefieres usar Jupyter en tu computadora? <a href="../../cuadernos/14-5-digitos.ipynb" download>Descarga el cuaderno (.ipynb)</a>.</p>
+    </div>
+  </section>
+  <section class="sec">
+    <span class="kicker">Qué vas a hacer</span>
+    <div class="steps">
+      <div><b>1 · Mirar</b>1 797 dígitos reales escritos a mano, de 8 × 8 píxeles.</div>
+      <div><b>2 · Entrenar</b>Una red pequeña aprende con el 75 % y el resto queda bajo llave.</div>
+      <div><b>3 · Guardar y cargar</b>La red cargada debe responder igual que la original.</div>
+      <div><b>4 · Usar</b>Pedirle respuestas sobre 450 dígitos que nunca vio.</div>
+      <div><b>5 · Confianza</b>¿Cuando dice 99 %, acierta? ¿Cuáles son sus errores más seguros?</div>
+      <div><b>6 · Lo que nunca vio</b>Ruido, una hoja en blanco, un cuadro negro… ¿qué responde?</div>
+      <div><b>7 · Decidir</b>Elegir cuándo la red lee sola y cuándo pasa el caso a una persona.</div>
+  </section>
+  <section class="sec">
+    <span class="kicker">Ayuda memoria</span>
+    <div class="memo" id="memo">
+      <h3>Usar una red entrenada</h3>
+      <ul>
+        <li><span class="key">1.</span> Cargar la red y preparar el dato igual que en el entrenamiento.</li>
+        <li><span class="key">2.</span> Pedir la respuesta: los pesos no cambian.</li>
+        <li><span class="key">3.</span> Leer la confianza, sin creerle a ciegas.</li>
+        <li><span class="key">4.</span> Decidir con un umbral: responde sola o pasa a una persona.</li>
+      </ul>
+      <p class="mn">La red siempre elige un número, aunque le muestres algo que no es un número.</p>
+    </div>
+  </section>
+  <section class="sec">
+    <div class="think"><b>Datos reales</b><p>Los dígitos fueron escritos a mano por personas reales y digitalizados en la Universidad Boğaziçi, en Turquía (Alpaydin y Kaynak, 1998). Vienen incluidos en la biblioteca Scikit-learn.</p></div>
+  </section>
+</main>
+<div class="band foot-band"><div class="wrap">
+  <!--NAV-->
+  <footer><span>Ejercicio del libro <em>Redes Neuronales en Mortales</em>, Capítulo II, sección 14.5.</span><span>Esta página no guarda ningún dato.</span></footer>
+</div></div>
+<script>/*COMMONJS*/</script>

@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Laboratorio 5.3: Codifica el transporte con one-hot y escala los tiempos entre 0 y 1."><meta name="theme-color" content="#F2F5FB"></head><body><title>Convierte palabras en números · Laboratorio 5.3</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>/* Layout: cuaderno de laboratorio sobre papel cuadriculado; una columna de lectura con "viñetas", guía y banco de pruebas */
+:root{
+  --paper:#F2F5FB; --grid:#E1E7F3; --card:#FFFFFF; --ink:#0A2540; --soft:#4A5B76; --line:#D3DCEB;
+  --blue:#1D4ED8; --blue-soft:#E2EAFD; --spark:#F59E0B; --spark-soft:#FEF0D2; --spark-ink:#9A5B00;
+  --ok:#0F8A47; --ok-soft:#D9F3E4; --bad:#D93A3F; --bad-soft:#FDE2E2; --lab:#1D4ED8;
+  --f-display:"Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --shadow:0 2px 0 var(--line);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0C1526; --grid:#15223A; --card:#121D33; --ink:#E8EEF8; --soft:#A3B2C9; --line:#26375A;
+  --blue:#82A6FF; --blue-soft:#1A2A52; --spark:#FFB938; --spark-soft:#3A2A0C; --spark-ink:#FFCF70;
+  --ok:#5DD68E; --ok-soft:#12331F; --bad:#FF8582; --bad-soft:#3E1717; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0C1526; --grid:#15223A; --card:#121D33; --ink:#E8EEF8; --soft:#A3B2C9; --line:#26375A;
+  --blue:#82A6FF; --blue-soft:#1A2A52; --spark:#FFB938; --spark-soft:#3A2A0C; --spark-ink:#FFCF70;
+  --ok:#5DD68E; --ok-soft:#12331F; --bad:#FF8582; --bad-soft:#3E1717; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6}
+.wrap{max-width:780px;margin:0 auto;padding-block:24px 64px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:flex;flex-direction:column;gap:30px}
+p{margin:0} h1,h2,h3{margin:0;text-wrap:balance;font-family:var(--f-display);line-height:1.1}
+h1{font-size:clamp(34px,8vw,54px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:clamp(25px,5vw,31px);font-weight:700}
+h3{font-size:21px;font-weight:700}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--soft)}
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:16px;align-items:end}
+@media (max-width:560px){.hero{grid-template-columns:minmax(0,1fr) 96px}}
+.tag{display:inline-flex;gap:8px;align-items:center;font:700 13px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;background:var(--lab);color:var(--card);padding:5px 11px;border-radius:6px;transform:rotate(-2deg);width:max-content}
+.book{font:700 13px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.hero-text{display:flex;flex-direction:column;gap:12px}
+.lede{font-size:20px;max-width:58ch}
+.meta{display:flex;gap:8px 16px;flex-wrap:wrap;font-size:15px;color:var(--soft)}
+.chispa{width:100%;height:auto;max-width:150px}
+/* secciones */
+.sec{display:flex;flex-direction:column;gap:16px}
+.kicker{font:700 13px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--lab)}
+.prose{display:flex;flex-direction:column;gap:12px;max-width:64ch}
+/* viñetas */
+.strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.strip{grid-template-columns:1fr}}
+.panel{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;box-shadow:4px 4px 0 var(--ink)}
+.panel .n{font:800 15px var(--f-display);width:28px;height:28px;border-radius:50%;background:var(--lab);color:var(--card);display:grid;place-items:center}
+.panel .pic{font-size:44px;line-height:1.1;min-height:52px}
+.panel p{font-size:16px;line-height:1.45}
+/* banco */
+.bench{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:18px;box-shadow:var(--shadow)}
+@media (max-width:480px){.bench{padding:16px}}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{font:700 16px var(--f-body);border:2px solid var(--line);background:var(--card);color:var(--ink);padding:9px 16px;border-radius:12px;cursor:pointer;min-height:46px;transition:transform .12s,border-color .12s}
+.btn:hover{border-color:var(--blue)} .btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:var(--card)}
+.btn.spark{background:var(--spark);border-color:var(--spark);color:#2A1A00}
+.btn:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.pill{display:inline-block;font:700 13px var(--f-mono);padding:3px 10px;border-radius:99px;background:var(--blue-soft);color:var(--blue);white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.spark{background:var(--spark-soft);color:var(--spark-ink)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:16px}
+th,td{border-bottom:1px solid var(--line);padding:8px;text-align:center}
+th{font:700 12px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--soft)}
+input[type=range]{accent-color:var(--blue);width:100%;height:28px}
+/* guía */
+.guide{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;align-items:start;background:var(--blue-soft);border-radius:16px;padding:14px}
+.guide .av{width:72px;height:72px}
+.bubble{background:var(--card);border-radius:14px;padding:12px 14px;position:relative;display:flex;flex-direction:column;gap:8px;border:2px solid var(--ink)}
+.bubble::before{content:"";position:absolute;left:-10px;top:22px;width:16px;height:16px;background:var(--card);border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}
+.bubble .who{font:700 13px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--lab)}
+.bubble .msg{font-size:17px}
+.missions{display:flex;gap:6px;flex-wrap:wrap}
+.missions span{font:700 12px var(--f-mono);padding:3px 8px;border-radius:99px;background:var(--card);color:var(--soft);border:1px solid var(--line)}
+.missions span.now{border-color:var(--blue);color:var(--blue)}
+.missions span.done{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.hint{font-size:15px;color:var(--soft);border-top:1px dashed var(--line);padding-top:8px}
+@media (max-width:480px){.guide{grid-template-columns:52px minmax(0,1fr)}.guide .av{width:52px;height:52px}}
+/* glosario */
+.term{border-bottom:2px dotted var(--lab);cursor:help;font-weight:700;background:none;border-top:0;border-left:0;border-right:0;padding:0;font:inherit;font-weight:700;color:inherit}
+.tip{position:absolute;z-index:20;max-width:min(320px,calc(100vw - 32px));background:var(--ink);color:var(--paper);padding:10px 12px;border-radius:10px;font-size:15px;line-height:1.45;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+/* aprendizajes */
+.learn{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.learn{grid-template-columns:1fr}}
+.learn div{background:var(--card);border-radius:14px;padding:14px;border-top:5px solid var(--lab);display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
+.learn b{font-family:var(--f-display);font-size:19px;line-height:1.2}
+.learn span{font-size:16px;color:var(--soft)}
+.think{background:var(--spark-soft);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.think b{font-family:var(--f-display);font-size:19px;color:var(--spark-ink)}
+.gloss{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px;font-size:16px}
+@media (max-width:560px){.gloss{grid-template-columns:1fr}}
+.gloss dt{font-weight:700} .gloss dd{margin:0 0 6px;color:var(--soft)}
+footer{font-size:14px;color:var(--soft);border-top:2px dashed var(--line);padding-top:14px;display:flex;flex-direction:column;gap:4px}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes wobble{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+.pop{animation:pop .35s ease-out}
+.wob{animation:wobble .5s ease-in-out}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:640px){.panel{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;align-items:center}.panel .n{grid-row:1;grid-column:1}.panel .pic{grid-row:2;grid-column:1;font-size:36px;min-height:0}.panel p{grid-row:1 / span 2;grid-column:2}}
+.thr>span:first-child{flex-basis:100%;text-align:center}
+
+/* ====== Secciones 4 y 5: contenedor centrado de ancho máximo + fondos a pantalla completa ====== */
+body{margin:0}
+.band{width:100%}
+.band>.wrap{padding-block:28px}
+.hero-band{position:relative;overflow:hidden;border-bottom:3px solid var(--ink);
+  background-color:color-mix(in srgb,var(--lab) 14%,var(--paper));
+  background-image:var(--pattern,none),linear-gradient(180deg,transparent 60%,color-mix(in srgb,var(--lab) 10%,transparent));}
+.hero-band .hero{grid-template-columns:minmax(0,1fr) 220px;align-items:center}
+@media (max-width:640px){.hero-band .hero{grid-template-columns:1fr}.hero-band .art{max-width:240px;margin:0 auto;order:-1}}
+.art{position:relative;width:100%}
+.art svg.scene{width:100%;height:auto;display:block}
+.art .chispa-mini{position:absolute;width:34%;right:-2%;top:-4%}
+main.wrap{padding-top:30px}
+.foot-band{background:color-mix(in srgb,var(--lab) 8%,var(--card));border-top:2px dashed var(--line)}
+.foot-band .wrap{gap:16px}
+.foot-band footer{border-top:0;padding-top:0}
+/* Ayuda memoria: nota adhesiva */
+.memo{position:relative;background:#FFF6C9;color:#2B2410;border-radius:4px 4px 18px 4px;padding:22px 18px 18px;box-shadow:3px 5px 0 rgba(10,37,64,.18);transform:rotate(-.6deg);display:flex;flex-direction:column;gap:10px;border-top:10px solid color-mix(in srgb,var(--lab) 55%,#FFF6C9)}
+.memo::before{content:"📌";position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:28px}
+.memo h3{font-size:22px;color:#2B2410}
+.memo ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.memo .key{font:800 17px var(--f-display);color:color-mix(in srgb,var(--lab) 80%,#000)}
+.memo .mn{font:700 15px var(--f-mono);background:#fff;border-radius:8px;padding:8px 10px;border:1px dashed #C9B66A}
+.fab{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:30;box-shadow:3px 3px 0 var(--ink);border:2px solid var(--ink)!important;background:#FFE58A!important;color:#2B2410!important}
+dialog.memo-dlg{border:0;padding:0;background:transparent;max-width:min(560px,calc(100vw - 24px));width:100%}
+dialog.memo-dlg::backdrop{background:rgba(10,37,64,.45)}
+dialog.memo-dlg .memo{transform:none;max-height:80vh;overflow:auto}
+dialog.memo-dlg .close{align-self:flex-end}
+/* Opciones y retroalimentación */
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.opt{font:700 16px var(--f-body);text-align:left;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:10px 12px;min-height:48px;cursor:pointer;display:flex;gap:8px;align-items:center;transition:transform .12s,border-color .12s}
+.opt:hover{border-color:var(--lab)} .opt:active{transform:translateY(1px)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.opt.sel{border-color:var(--lab);background:color-mix(in srgb,var(--lab) 14%,var(--card))}
+.opt .ic{font-size:22px;line-height:1}
+.fb{display:grid;grid-template-columns:46px minmax(0,1fr);gap:10px;align-items:center;border-radius:14px;padding:10px 12px;background:var(--paper);font-size:17px;min-height:64px}
+.fb .face{width:46px;height:46px}
+.fb.ok{background:var(--ok-soft)} .fb.bad{background:var(--bad-soft)} .fb.info{background:var(--blue-soft)}
+.prog{height:12px;background:var(--paper);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.prog>i{display:block;height:100%;width:0;background:var(--lab);border-radius:99px;transition:width .35s}
+.chip{display:inline-flex;align-items:center;gap:6px;font:700 13px var(--f-mono);padding:4px 10px;border-radius:99px;background:color-mix(in srgb,var(--lab) 14%,var(--card));color:var(--ink);border:1px solid color-mix(in srgb,var(--lab) 40%,var(--line))}
+.card-big{background:var(--card);border:2px solid var(--ink);border-radius:16px;box-shadow:4px 4px 0 var(--ink);padding:16px;display:flex;flex-direction:column;gap:8px}
+.card-big .big{font:800 clamp(24px,6vw,34px) var(--f-display);line-height:1.1}
+.sub{font:700 13px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.labkick{color:var(--lab)}
+td.l,th.l{text-align:left}
+.lab-c{color:color-mix(in srgb,var(--lab) 85%,var(--ink))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .memo{background:#3A3315;color:#FFF3C4}:root:not([data-theme="light"]) .memo h3{color:#FFF3C4}:root:not([data-theme="light"]) .memo .mn{background:#2A250F;border-color:#6B5E2A}:root:not([data-theme="light"]) .memo .key{color:#FFE58A}}
+.days{display:flex;flex-direction:column;gap:6px}
+.days label{font-weight:700}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;flex-wrap:wrap}
+.seg button{font:700 15px var(--f-body);border:0;background:var(--card);color:var(--ink);padding:8px 14px;min-height:42px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--lab);color:var(--card)}
+.foot-band .wrap{padding-bottom:96px}
+.memo ul.checks{list-style:none;padding-left:4px}
+.memo .mn{font-family:var(--f-body);font-weight:700;font-size:16px}
+@media (max-width:480px){.fab{font-size:14px;min-height:40px;padding:6px 12px}}
+
+:root{--lab:#1D4ED8;--pattern:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24'%3E%3Ctext x='3' y='16' font-family='monospace' font-size='12' fill='%231D4ED8' fill-opacity='.14'%3E0 1%3C/text%3E%3C/svg%3E")}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--lab:#82A6FF}}
+:root[data-theme="dark"]{--lab:#82A6FF}
+.trap{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:520px){.trap{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tk{background:var(--paper);border-radius:12px;padding:10px;text-align:center;border:2px solid var(--line)}
+.tk .em{font-size:30px;line-height:1.1} .tk b{display:block;font:800 26px var(--f-mono);color:var(--lab)} .tk span{font-size:14px}
+.oh{display:flex;flex-direction:column;gap:10px}
+.ohrow{display:grid;grid-template-columns:150px repeat(4,minmax(0,1fr));gap:6px;align-items:center}
+@media (max-width:560px){.ohrow{grid-template-columns:96px repeat(4,minmax(0,1fr))}}
+.ohrow .who{font-size:15px;line-height:1.2}
+.ohrow .who b{display:block;font-family:var(--f-mono);font-size:13px;color:var(--soft)}
+.ohh .e{font-size:20px}
+@media (max-width:560px){.ohh .t{display:none}}
+.ohh{font:700 11px var(--f-mono);text-transform:uppercase;letter-spacing:.03em;color:var(--soft);text-align:center;word-break:break-word}
+.bulb{font:800 20px var(--f-mono);height:50px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--soft);cursor:pointer;transition:all .15s}
+.bulb[aria-pressed="true"]{background:var(--spark);border-color:var(--spark);color:#2A1A00;box-shadow:0 0 0 4px var(--spark-soft)}
+.ohrow.good .bulb[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff;box-shadow:0 0 0 4px var(--ok-soft)}
+.ohrow .st{grid-column:2 / -1;font-size:13px;color:var(--soft)}
+.dist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.dist{grid-template-columns:1fr}}
+.dist .card-big .big{font-size:26px}
+.line{width:100%;display:block}
+.calc{font:500 16px var(--f-mono);background:var(--paper);border-radius:12px;padding:12px;line-height:1.8;overflow-x:auto}
+.calc b{color:var(--lab)}
+.final td{font-family:var(--f-mono)}
+.final td.one{color:var(--ok);font-weight:700}
+.sw2{display:flex;align-items:center;gap:10px;font-weight:700;cursor:pointer}
+.sw2 input{width:22px;height:22px;accent-color:var(--lab)}
+</style>
+<header class="band hero-band">
+  <div class="wrap hero">
+    <div class="hero-text">
+      <span class="book">Redes Neuronales en Mortales · Capítulo I · Sección 5</span>
+      <span class="tag">Laboratorio 5.3</span>
+      <h1>Convierte palabras en números</h1>
+      <p class="lede">Una red neuronal solo sabe hacer una cosa: operar con números. No entiende la palabra «Teleférico». Aquí vas a convertir los medios de transporte con one-hot y a escalar los tiempos de viaje entre 0 y 1.</p>
+      <div class="meta"><span>⏱ 7 minutos</span><span>Una resta y una división, nada más</span></div>
+    </div>
+    <div class="art" aria-hidden="true">
+      <svg class="scene" viewBox="0 0 220 190">
+        <g stroke="var(--ink)" stroke-width="3">
+          <rect x="14" y="30" width="44" height="62" rx="10" fill="var(--card)"/><rect x="64" y="30" width="44" height="62" rx="10" fill="var(--spark)"/><rect x="114" y="30" width="44" height="62" rx="10" fill="var(--card)"/><rect x="164" y="30" width="44" height="62" rx="10" fill="var(--card)"/></g>
+        <g font-family="JetBrains Mono,monospace" font-size="24" font-weight="800" text-anchor="middle" fill="var(--ink)"><text x="36" y="70">0</text><text x="86" y="70">1</text><text x="136" y="70">0</text><text x="186" y="70">0</text></g>
+        <g font-size="18" text-anchor="middle"><text x="36" y="22">🚡</text><text x="86" y="22">🚐</text><text x="136" y="22">🚶</text><text x="186" y="22">🚌</text></g>
+        <rect x="14" y="122" width="194" height="34" rx="6" fill="color-mix(in srgb,var(--lab) 25%,var(--card))" stroke="var(--ink)" stroke-width="3"/>
+        <g stroke="var(--ink)" stroke-width="2"><path d="M24 122v12M62 122v8M100 122v12M138 122v8M176 122v8M198 122v12"/></g>
+        <g font-family="JetBrains Mono,monospace" font-size="11" font-weight="700" fill="var(--ink)" text-anchor="middle"><text x="24" y="176">0</text><text x="198" y="176">1</text><text x="110" y="150">mín → máx</text></g>
+      </svg>
+      <div data-chispa="happy" class="chispa-mini"></div>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="sec">
+    <span class="kicker">Primero, la idea</span>
+    <div class="strip">
+      <div class="panel"><span class="n">1</span><span class="pic" aria-hidden="true">✍️</span><p><strong>Texto → tokens.</strong> Cada fragmento de palabra recibe un número: «tele» podría ser el 4 521.</p></div>
+      <div class="panel"><span class="n">2</span><span class="pic" aria-hidden="true">🖼️</span><p><strong>Imagen → píxeles.</strong> Una imagen de 28 × 28 en blanco y negro son 784 números entre 0 y 255.</p></div>
+      <div class="panel"><span class="n">3</span><span class="pic" aria-hidden="true">🚡</span><p><strong>Categorías → ¿?</strong> «Teleférico», «Minibús», «A pie», «Micro». Aquí está la trampa. Veámosla.</p></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ahora, pruébalo</span>
+    <div id="guide"></div>
+    <div class="bench">
+      <h3>1 · La trampa del 1, 2, 3, 4</h3>
+      <p>La primera idea es poner un número a cada medio de transporte:</p>
+      <div class="trap"><div class="tk"><div class="em">🚡</div><b>1</b><span>Teleférico</span></div><div class="tk"><div class="em">🚐</div><b>2</b><span>Minibús</span></div><div class="tk"><div class="em">🚶</div><b>3</b><span>A pie</span></div><div class="tk"><div class="em">🚌</div><b>4</b><span>Micro</span></div></div>
+      <p>Pero la red <strong>sí</strong> hace cuentas con esos números. Pregúntale algo:</p>
+      <div class="opts" id="trapq">
+        <button class="opt" data-q="0">¿Cuánto es Micro ÷ Teleférico?</button>
+        <button class="opt" data-q="1">¿Qué hay entre Teleférico y Micro?</button>
+        <button class="opt" data-q="2">¿Qué está más cerca del Teleférico?</button>
+      </div>
+      <div class="fb info" id="fbt" aria-live="polite"></div>
+    </div>
+
+    <div class="bench">
+      <h3>2 · Enciende un solo foco: one-hot</h3>
+      <p>La solución: una columna por categoría y un <strong>1</strong> solo en la que corresponde. Como una neurona activa, solo una «se enciende». Toca los focos para armar cada fila.</p>
+      <div class="oh" id="oh"></div>
+      <div class="fb info" id="fbo" aria-live="polite"></div>
+      <div class="dist" id="dist" hidden></div>
+    </div>
+
+    <div class="bench">
+      <h3>3 · Escala los tiempos entre 0 y 1</h3>
+      <p>Si una entrada va de 18 a 25 y otra de 900 a 10 800, la grande domina la suma y entrenar se vuelve lento e inestable. La <button class="term" data-def="Técnica que lleva los valores de una variable al rango entre 0 y 1: se resta el mínimo y se divide entre el rango (máximo − mínimo).">normalización mín-máx</button> lleva todo al rango de 0 a 1:</p>
+      <div class="calc" style="text-align:center"><b>nuevo valor</b> = (valor − mínimo) ÷ (máximo − mínimo)</div>
+      <label class="sw2"><input type="checkbox" id="w180" checked> Incluir el viaje de 180 minutos (el día del bloqueo)</label>
+      <svg class="line" id="line" viewBox="0 0 600 170" role="img" aria-label="Recta de 0 a 1 con los tiempos escalados"></svg>
+      <div class="row" id="pick"></div>
+      <div class="calc" id="calc" aria-live="polite"></div>
+      <div id="quiz"></div>
+      <div class="fb info" id="fbs" aria-live="polite"></div>
+    </div>
+
+    <div class="bench" id="finalbox" hidden>
+      <h3>🎉 Así quedan las filas, listas para la red</h3>
+      <div class="tablewrap"><table class="final" id="final"></table></div>
+      <p class="muted" style="font-size:15px">Ahora sí: una tabla de puros números. Es la misma que aparece en el libro.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ayuda memoria</span>
+    <div class="memo" id="memo">
+      <h3>¿Cómo convierto cada dato?</h3>
+      <ul>
+        <li><span class="key">Categoría sin orden</span> (transporte, zona) → <strong>one-hot</strong>: una columna por categoría, un solo 1.</li>
+        <li><span class="key">Categoría con orden</span> (mala, regular, buena) → 1, 2, 3 sí sirve, porque el orden es real.</li>
+        <li><span class="key">Números</span> → escala de 0 a 1.</li>
+      </ul>
+      <p class="mn">(valor − mín) ÷ (máx − mín)<br>el mínimo da 0 · el máximo da 1</p>
+      <p class="mn">Ojo: un solo valor extremo aplasta la escala. Y el mínimo y el máximo se calculan solo con los datos de entrenamiento, o habrá fuga de datos.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Lo que acabas de aprender</span>
+    <div class="learn">
+      <div><b>No inventes un orden</b><span>Con 1, 2, 3, 4 la red cree que el Micro es «cuatro veces» el Teleférico.</span></div>
+      <div><b>Un solo caliente</b><span>One-hot pone a todas las categorías a la misma distancia unas de otras.</span></div>
+      <div><b>Ninguno domina</b><span>Escalar evita que un número grande se coma a los pequeños. Por eso la limpieza va antes.</span></div>
+    </div>
+    <div class="think"><b>Para pensar</b><p>De la fecha de cada viaje podrías sacar el día de la semana: ¿los lunes hay más tráfico? Inventar variables útiles se llama <strong>ingeniería de características</strong>. ¿Qué otra columna nueva le agregarías a esta tabla?</p></div>
+    <dl class="gloss">
+      <div><dt>Codificación one-hot</dt><dd>Convierte una categoría en columnas de ceros y unos, con un 1 solo en la que corresponde.</dd></div>
+      <div><dt>Normalización mín-máx</dt><dd>Escalado que lleva los valores al rango entre 0 y 1.</dd></div>
+      <div><dt>Tokenización</dt><dd>Conversión de un texto en fragmentos (tokens) a los que se asigna un número.</dd></div>
+      <div><dt>Fuga de datos</dt><dd>Información de los datos de prueba que se filtra al entrenamiento y da resultados falsamente buenos.</dd></div>
+    </dl>
+  </section>
+</main>
+<div class="band foot-band"><div class="wrap">
+  <nav class="row" style="justify-content:space-between;gap:10px" aria-label="Otros laboratorios"><a class="btn" style="text-decoration:none;display:inline-flex;align-items:center" href="/redes-neuronales/c1/limpieza/">← 5.2</a><a class="btn" style="text-decoration:none;display:inline-flex;align-items:center" href="/redes-neuronales/">Todos los laboratorios</a><a class="btn" style="text-decoration:none;display:inline-flex;align-items:center" href="/redes-neuronales/c1/graficos/">5.6 →</a></nav>
+  <footer><span>Datos del ejemplo del libro <em>Redes Neuronales en Mortales</em>, Capítulo I, sección 5.3.</span><span>Funciona en el celular y no guarda ningún dato.</span></footer>
+</div></div>
+<script>/* Chispa: la neurona que guía los laboratorios */
+function chispaSVG(mood){
+  const m={happy:"M38 62 Q50 74 62 62",think:"M40 66 L60 64",wow:"M46 64 a4 5 0 1 0 8 0 a4 5 0 1 0 -8 0",sad:"M40 68 Q50 60 60 68"}[mood||"happy"];
+  return `<svg viewBox="0 0 100 100" class="chispa-svg" aria-hidden="true">
+  <g stroke="var(--lab)" stroke-width="5" stroke-linecap="round" fill="none">
+   <path d="M22 38 L8 26 M8 26 L4 14 M8 26 L-2 28"/><path d="M20 66 L6 78 M6 78 L-2 76 M6 78 L4 90"/>
+   <path d="M50 20 L50 6 M50 6 L42 0 M50 6 L58 0"/><path d="M80 58 L96 66 M96 66 L100 60"/></g>
+  <circle cx="50" cy="52" r="32" fill="var(--lab)"/>
+  <circle cx="50" cy="52" r="26" fill="var(--card)"/>
+  <circle cx="40" cy="48" r="5" fill="var(--ink)"/><circle cx="60" cy="48" r="5" fill="var(--ink)"/>
+  <circle cx="42" cy="46" r="1.6" fill="var(--card)"/><circle cx="62" cy="46" r="1.6" fill="var(--card)"/>
+  <path d="${m}" stroke="var(--ink)" stroke-width="3.5" fill="${mood==="wow"?"var(--ink)":"none"}" stroke-linecap="round"/>
+  <circle cx="32" cy="58" r="4" fill="var(--spark)" opacity=".55"/><circle cx="68" cy="58" r="4" fill="var(--spark)" opacity=".55"/>
+  <path d="M74 18 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="var(--spark)"/></svg>`;}
+document.querySelectorAll("[data-chispa]").forEach(el=>el.innerHTML=chispaSVG(el.dataset.chispa));
+
+/* Guía con misiones: cada misión tiene un texto, una pista, una condición y una explicación al lograrla */
+function Guide(root,{intro,missions,finale}){
+  let i=-1,solved=false;
+  root.classList.add("guide");
+  root.innerHTML=`<div class="av"></div><div class="bubble" aria-live="polite"><span class="who"></span><div class="msg"></div>
+    <div class="row" style="gap:8px"><button class="btn primary" data-next></button><button class="btn" data-hint>Dame una pista</button></div>
+    <p class="hint" hidden></p><div class="missions"></div></div>`;
+  const av=root.querySelector(".av"),who=root.querySelector(".who"),msg=root.querySelector(".msg"),nx=root.querySelector("[data-next]"),hb=root.querySelector("[data-hint]"),hint=root.querySelector(".hint"),ms=root.querySelector(".missions");
+  function face(m,anim){av.innerHTML=chispaSVG(m);if(anim){av.classList.remove("wob");void av.offsetWidth;av.classList.add("wob");}}
+  function chips(){ms.innerHTML=missions.map((_,k)=>`<span class="${k<i||(k===i&&solved)?"done":k===i?"now":""}">${k<i||(k===i&&solved)?"✓ ":""}Misión ${k+1}</span>`).join("");}
+  function show(){hint.hidden=true;
+    if(i<0){who.textContent="Chispa";msg.innerHTML=intro;nx.textContent="¡Empecemos!";nx.hidden=false;hb.hidden=true;face("happy");}
+    else if(i>=missions.length){who.textContent="Laboratorio completo";msg.innerHTML=finale;nx.hidden=true;hb.hidden=true;face("wow",true);}
+    else{const m=missions[i];who.textContent=`Misión ${i+1} de ${missions.length}`;msg.innerHTML=m.text;nx.hidden=true;hb.hidden=!m.hint;face("think");}
+    chips();}
+  nx.onclick=()=>{i++;solved=false;show();if(api.onMission)api.onMission(i);};
+  hb.onclick=()=>{hint.hidden=!hint.hidden;hint.innerHTML=missions[i].hint;};
+  const api={update(s){if(i<0||i>=missions.length||solved)return;const m=missions[i];
+      if(m.done(s)){solved=true;who.textContent=`¡Misión ${i+1} lograda!`;msg.innerHTML=(typeof m.ok==="function"?m.ok(s):m.ok);
+        nx.textContent=i===missions.length-1?"Terminar":"Siguiente misión";nx.hidden=false;hb.hidden=true;hint.hidden=true;face("happy",true);chips();}},
+    get index(){return i;},onMission:null,start(){i=0;solved=false;show();}};
+  show();return api;}
+
+/* Glosario: toca una palabra subrayada para ver su significado */
+(function(){let tip=null;
+  function close(){if(tip){tip.remove();tip=null;}}
+  document.addEventListener("click",e=>{const t=e.target.closest(".term");close();if(!t)return;
+    tip=document.createElement("div");tip.className="tip";tip.setAttribute("role","tooltip");tip.textContent=t.dataset.def;document.body.appendChild(tip);
+    const r=t.getBoundingClientRect(),w=tip.offsetWidth;let x=r.left+scrollX;x=Math.max(16,Math.min(x,innerWidth-w-16));
+    tip.style.left=x+"px";tip.style.top=(r.bottom+scrollY+6)+"px";});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});
+  addEventListener("resize",close);})();
+const tok=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function onTheme(fn){matchMedia("(prefers-color-scheme: dark)").addEventListener("change",fn);new MutationObserver(fn).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});}
+
+/* ====== Secciones 4 y 5: utilidades compartidas ====== */
+const $=id=>document.getElementById(id);
+/* Retroalimentación con la cara de Chispa */
+function say(el,mood,html,kind){el.className="fb "+(kind||"info");el.innerHTML=`<div class="face">${chispaSVG(mood)}</div><div>${html}</div>`;
+  const f=el.querySelector(".face");f.classList.remove("wob");void f.offsetWidth;f.classList.add(mood==="sad"?"wob":"pop");}
+/* Ayuda memoria flotante: copia el contenido de #memo en un diálogo */
+(function(){const src=document.getElementById("memo");if(!src||!window.HTMLDialogElement)return;
+  const d=document.createElement("dialog");d.className="memo-dlg";d.innerHTML=`<div class="memo">${src.innerHTML}<button class="btn close">Cerrar</button></div>`;
+  document.body.appendChild(d);d.querySelector(".close").onclick=()=>d.close();d.addEventListener("click",e=>{if(e.target===d)d.close();});
+  const b=document.createElement("button");b.className="btn fab";b.type="button";b.innerHTML="📌 Ayuda memoria";b.onclick=()=>d.showModal();document.body.appendChild(b);})();
+const fmt=(x,d=2)=>x.toLocaleString("es-BO",{minimumFractionDigits:d,maximumFractionDigits:d});
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+const T=["Teleférico","Minibús","A pie","Micro"],EM=["🚡","🚐","🚶","🚌"];
+const ROWS=[{id:1,t:0,min:25},{id:2,t:1,min:50},{id:4,t:2,min:15},{id:7,t:3,min:180}];
+const st={trap:new Set(),bulbs:ROWS.map(()=>[0,0,0,0]),ohOk:0,a:0,b:3,with180:true,sel:25,quizOk:false,toggled:false};
+const TRAP=["Micro ÷ Teleférico = 4 ÷ 1 = <strong>4</strong>. Para la red, el Micro vale cuatro veces el Teleférico. ¡No tiene sentido!",
+ "(1 + 4) ÷ 2 = <strong>2,5</strong>, justo entre Minibús y A pie. La red cree que «A pie» está a mitad de camino entre el Teleférico y el Micro. ¡Un orden que no existe!",
+ "Minibús (2) está a 1 de distancia y Micro (4) a 3. ¿Por qué el Minibús se «parecería» más al Teleférico? Solo porque le tocó el número 2."];
+document.querySelectorAll("#trapq .opt").forEach(b=>b.onclick=()=>{st.trap.add(+b.dataset.q);b.classList.add("sel");say($("fbt"),"sad",TRAP[+b.dataset.q]+(st.trap.size>=2?" Estamos <strong>inventando un orden</strong>. Necesitamos otra forma.":""),"bad");G.update(st);});
+function oh(){let h=`<div class="ohrow"><span></span>${T.map((t,i)=>`<span class="ohh"><span class="e">${EM[i]}</span> <span class="t">${t}</span></span>`).join("")}</div>`;
+  ROWS.forEach((r,i)=>{const b=st.bulbs[i],on=b.reduce((x,y)=>x+y),good=on===1&&b[r.t]===1;
+    h+=`<div class="ohrow ${good?"good":""}"><span class="who"><b>id ${r.id}</b>${EM[r.t]} ${T[r.t]}</span>${b.map((v,j)=>`<button class="bulb" data-i="${i}" data-j="${j}" aria-pressed="${v===1}" aria-label="${T[r.t]}, columna ${T[j]}: ${v}">${v}</button>`).join("")}<span class="st">${good?"✓ un solo foco, en su columna":on>1?"⚠ hay más de un foco encendido":on===1?"✗ ese foco no corresponde":"todo apagado"}</span></div>`;});
+  $("oh").innerHTML=h;st.ohOk=ROWS.filter((r,i)=>st.bulbs[i].reduce((x,y)=>x+y)===1&&st.bulbs[i][r.t]===1).length;
+  document.querySelectorAll(".bulb").forEach(b=>b.onclick=()=>{const i=+b.dataset.i,j=+b.dataset.j;st.bulbs[i][j]^=1;bulbFb(i,j);oh();});
+  $("dist").hidden=st.ohOk<4;if(st.ohOk===4)dist();finalT();G.update(st);}
+function bulbFb(i,j){const r=ROWS[i],b=st.bulbs[i],on=b.reduce((x,y)=>x+y);
+  if(on>1)say($("fbo"),"sad","Solo puede haber <strong>un</strong> foco encendido por fila: por eso se llama «un solo caliente».","bad");
+  else if(on===1&&b[r.t]===1)say($("fbo"),st.ohOk>=3?"wow":"happy",st.ohOk>=3?"¡Las cuatro filas listas! Abajo puedes comparar distancias.":`¡Bien! ${T[r.t]} se escribe con un 1 solo en su columna.`,"ok");
+  else if(on===1)say($("fbo"),"think",`Esta fila es de alguien que viaja en <strong>${T[r.t]}</strong>. Enciende esa columna.`);
+  else say($("fbo"),"think","Fila apagada. Enciende la columna de su medio de transporte.");}
+function dist(){const a=st.a,b=st.b,d1=Math.abs((a+1)-(b+1)),d2=a===b?0:Math.SQRT2;
+  $("dist").innerHTML=`<div style="grid-column:1/-1" class="row"><span class="sub">Compara la distancia entre</span><select id="da" class="btn">${T.map((t,i)=>`<option value="${i}" ${i===a?"selected":""}>${t}</option>`).join("")}</select><span>y</span><select id="db" class="btn">${T.map((t,i)=>`<option value="${i}" ${i===b?"selected":""}>${t}</option>`).join("")}</select></div>
+  <div class="card-big"><span class="sub">Con 1, 2, 3, 4</span><span class="big">${d1}</span><span class="muted" style="font-size:15px">${d1>1?"Parecen muy distintos solo por el número que les tocó.":d1===1?"Parecen vecinos solo por el número que les tocó.":"Es la misma categoría."}</span></div>
+  <div class="card-big"><span class="sub">Con one-hot</span><span class="big">${a===b?"0":"≈ 1,41"}</span><span class="muted" style="font-size:15px">${a===b?"Es la misma categoría.":"Siempre la misma (√2): ninguna categoría está «más cerca» que otra."}</span></div>`;
+  $("da").onchange=e=>{st.a=+e.target.value;dist();};$("db").onchange=e=>{st.b=+e.target.value;dist();};}
+/* escalado */
+const times=()=>ROWS.filter(r=>st.with180||r.min!==180).map(r=>r.min);
+const sc=v=>{const t=times(),mn=Math.min(...t),mx=Math.max(...t);return (v-mn)/(mx-mn);};
+const c2=x=>fmt(x,2);
+function line(){if(!times().includes(st.sel))st.sel=times()[0];const t=times(),mn=Math.min(...t),mx=Math.max(...t),X=v=>40+520*v,c=tok;
+  let g=`<line x1="40" y1="70" x2="560" y2="70" stroke="${c('--ink')}" stroke-width="3"/>`;
+  for(let k=0;k<=10;k++)g+=`<line x1="${X(k/10)}" x2="${X(k/10)}" y1="64" y2="${k%5?76:80}" stroke="${c('--ink')}" stroke-width="2"/>`;
+  g+=`<text x="40" y="100" text-anchor="middle" font-size="16" font-weight="700" fill="${c('--ink')}">0</text><text x="560" y="100" text-anchor="middle" font-size="16" font-weight="700" fill="${c('--ink')}">1</text><text x="300" y="100" text-anchor="middle" font-size="13" fill="${c('--soft')}">0,5</text>`;
+  const used=[];
+  ROWS.filter(r=>st.with180||r.min!==180).forEach(r=>{const v=sc(r.min),x=X(v);let lvl=0;while(used.some(u=>u.l===lvl&&Math.abs(u.x-x)<70))lvl++;used.push({x,l:lvl});
+    const sel=r.min===st.sel,y=40-lvl*22;
+    g+=`<circle cx="${x}" cy="70" r="${sel?11:8}" fill="${sel?c('--lab'):c('--spark')}" stroke="${c('--ink')}" stroke-width="2"/>`;
+    g+=`<text x="${x}" y="${y}" text-anchor="middle" font-size="14" font-weight="700" fill="${c('--ink')}">${r.min} min → ${c2(v)}</text>`;});
+  g+=`<text x="300" y="140" text-anchor="middle" font-size="14" fill="${c('--soft')}">mínimo = ${mn} · máximo = ${mx} · rango = ${mx-mn}</text>`;
+  $("line").innerHTML=g;
+  $("pick").innerHTML=`<span class="sub">Calcula:</span>`+ROWS.filter(r=>st.with180||r.min!==180).map(r=>`<button class="btn ${r.min===st.sel?"primary":""}" data-m="${r.min}">${EM[r.t]} ${r.min} min</button>`).join("");
+  document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{st.sel=+b.dataset.m;line();});
+  const v=st.sel;$("calc").innerHTML=`(${v} − <b>${mn}</b>) ÷ (<b>${mx}</b> − <b>${mn}</b>) = ${v-mn} ÷ ${mx-mn} = <b>${c2((v-mn)/(mx-mn))}</b>`;
+  finalT();G.update(st);}
+$("w180").onchange=e=>{st.with180=e.target.checked;st.toggled=true;
+  if(!st.with180)say($("fbs"),"wow","Sin el 180, el máximo es 50 y los tiempos se reparten por toda la recta: 25 pasa a <strong>0,29</strong>. Con el 180 estaban amontonados cerca de 0. ¡Un solo valor extremo aplastaba la escala!","ok");
+  else say($("fbs"),"think","Con el 180, el máximo sube y 15, 25 y 50 quedan amontonados cerca de 0 (0,00 · 0,06 · 0,21). Por eso la limpieza y el análisis exploratorio van antes de transformar.");
+  line();};
+function quiz(){if(st.quizOk){$("quiz").innerHTML="";return;}
+  $("quiz").innerHTML=`<p><strong>Reto:</strong> con 15, 25, 50 y 180 minutos, ¿en cuánto queda el viaje de <strong>25 minutos</strong>?</p><div class="opts">${shuffle([["0,06",1],["0,25",0],["0,14",0],["0,50",0]]).map(([t,ok])=>`<button class="opt" data-ok="${ok}">${t}</button>`).join("")}</div>`;
+  $("quiz").querySelectorAll(".opt").forEach(b=>b.onclick=()=>{if(b.dataset.ok==="1"){st.quizOk=true;b.classList.add("right");say($("fbs"),"happy","¡Exacto! (25 − 15) ÷ (180 − 15) = 10 ÷ 165 ≈ <strong>0,06</strong>. Ahora quita el 180 con la casilla de arriba y mira qué pasa.","ok");setTimeout(quiz,1800);finalT();G.update(st);}
+    else{b.classList.add("wrong");b.disabled=true;say($("fbs"),"sad","Casi. Resta primero el mínimo (15) y divide entre el rango: 180 − 15 = 165. Usa los botones de «Calcula» para verlo paso a paso.","bad");}});}
+function finalT(){const show=st.ohOk===4&&st.quizOk;$("finalbox").hidden=!show;if(!show)return;
+  const mn=15,mx=180;$("final").innerHTML=`<thead><tr><th>id</th>${T.map(t=>`<th>${t}</th>`).join("")}<th>tiempo (escalado)</th></tr></thead><tbody>`+ROWS.map(r=>`<tr><td>${r.id}</td>${T.map((_,j)=>`<td class="${j===r.t?"one":""}">${j===r.t?1:0}</td>`).join("")}<td>${c2((r.min-mn)/(mx-mn))}</td></tr>`).join("")+"</tbody>";}
+const G=Guide($("guide"),{
+ intro:"¡Hola! Soy <strong>Chispa</strong> y solo entiendo números. Si me dices «Teleférico», no sé qué hacer. ¿Me ayudas a traducir la tabla limpia del Laboratorio 5.2 a mi idioma?",
+ missions:[
+  {text:"En la parte 1, hazle a la red <strong>dos preguntas</strong> sobre el 1, 2, 3, 4.",hint:"Toca dos de los tres botones de preguntas.",done:s=>s.trap.size>=2,ok:"Viste la trampa: con 1, 2, 3, 4 inventamos un orden que no existe."},
+  {text:"En la parte 2, arma las <strong>4 filas one-hot</strong>: un solo foco encendido por fila, en su columna.",hint:"Cada fila dice su transporte a la izquierda. Enciende solo ese foco.",done:s=>s.ohOk>=4,ok:"¡Todas las categorías a la misma distancia! Compara las distancias en el recuadro que apareció."},
+  {text:"En la parte 3, resuelve el <strong>reto del viaje de 25 minutos</strong>.",hint:"Mínimo 15, máximo 180. (25 − 15) ÷ (180 − 15).",done:s=>s.quizOk,ok:"Ya sabes escalar a mano. Así lo hace la computadora con miles de filas."},
+  {text:"Desmarca <strong>«Incluir el viaje de 180 minutos»</strong> y observa la recta.",hint:"Es la casilla que está sobre la recta de 0 a 1.",done:s=>s.toggled&&!s.with180,ok:"Un solo valor extremo puede aplastar la escala de todo el resto. Vuelve a marcarla si quieres comparar."}],
+ finale:"¡Laboratorio completo! Convertiste categorías con <strong>one-hot</strong> y escalaste números entre <strong>0 y 1</strong>. Ahora sí, una tabla de puros números, lista para alimentar una red neuronal."});
+G.onMission=()=>G.update(st);
+oh();line();quiz();say($("fbt"),"think","Elige una pregunta y mira qué responde la red.");say($("fbo"),"think","Toca un foco para encenderlo o apagarlo.");say($("fbs"),"think","Toca un tiempo para ver el cálculo paso a paso.");
+onTheme(line);
+</script>
+</body></html>

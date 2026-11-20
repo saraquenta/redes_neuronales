@@ -1,0 +1,210 @@
+<title>El gráfico que miente · Laboratorio 5.6</title>
+<!--HEAD-->
+<style>/*COMMON*/
+:root{--lab:#BE123C;--pattern:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='40'%3E%3Cg fill='%23BE123C' fill-opacity='.12'%3E%3Crect x='8' y='22' width='6' height='12'/%3E%3Crect x='17' y='14' width='6' height='20'/%3E%3Crect x='26' y='26' width='6' height='8'/%3E%3C/g%3E%3C/svg%3E")}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--lab:#FF6B8B}}
+:root[data-theme="dark"]{--lab:#FF6B8B}
+.chart{width:100%;display:block;max-width:640px;margin:0 auto}
+.headline{font:800 clamp(20px,4.6vw,28px) var(--f-display);text-align:center;padding:10px;border-radius:12px;background:var(--paper);line-height:1.2}
+.headline small{display:block;font:700 12px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.meters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.meters .card-big .big{font-size:28px}
+.ctypes{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px}
+.ct{font:700 14px var(--f-body);border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:88px}
+.ct svg{width:56px;height:40px}
+.ct:hover{border-color:var(--lab)}
+.ct.right{border-color:var(--ok);background:var(--ok-soft)} .ct.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.fixes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.fix{display:flex;gap:10px;align-items:center;border:2px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;font-weight:700;font-size:15px;background:var(--card)}
+.fix input{width:22px;height:22px;accent-color:var(--lab);flex:none}
+.fix.on{border-color:var(--ok);background:var(--ok-soft)}
+.fix.stat.on{border-color:var(--lab);background:color-mix(in srgb,var(--lab) 10%,var(--card))}
+</style>
+<header class="band hero-band">
+  <div class="wrap hero">
+    <div class="hero-text">
+      <span class="book">Redes Neuronales en Mortales · Capítulo I · Sección 5</span>
+      <span class="tag">Laboratorio 5.6</span>
+      <h1>El gráfico que miente</h1>
+      <p class="lede">Los datos pueden ser los mismos y el gráfico contar una historia distinta. Aquí vas a mover el eje de un gráfico para ver cómo engaña, a elegir el gráfico correcto para cada pregunta y a arreglar uno mal hecho.</p>
+      <div class="meta"><span>⏱ 8 minutos</span><span>Solo mirar con atención</span></div>
+    </div>
+    <div class="art" aria-hidden="true">
+      <svg class="scene" viewBox="0 0 220 190">
+        <path d="M24 20 V170 H206" fill="none" stroke="var(--ink)" stroke-width="3"/>
+        <path d="M18 120 l12 -6 M18 128 l12 -6" stroke="var(--ink)" stroke-width="3"/>
+        <rect x="46" y="110" width="36" height="60" fill="color-mix(in srgb,var(--lab) 35%,var(--card))" stroke="var(--ink)" stroke-width="3"/>
+        <rect x="102" y="40" width="36" height="130" fill="var(--lab)" stroke="var(--ink)" stroke-width="3"/>
+        <text x="64" y="102" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" fill="var(--ink)">50</text>
+        <text x="120" y="32" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" fill="var(--ink)">52</text>
+        <circle cx="168" cy="96" r="24" fill="var(--card)" fill-opacity=".6" stroke="var(--ink)" stroke-width="4"/><path d="M185 113 L204 134" stroke="var(--ink)" stroke-width="7" stroke-linecap="round"/>
+        <text x="168" y="104" text-anchor="middle" font-size="22">🤔</text>
+      </svg>
+      <div data-chispa="think" class="chispa-mini"></div>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="sec">
+    <span class="kicker">Primero, la idea</span>
+    <div class="strip">
+      <div class="panel"><span class="n">1</span><span class="pic" aria-hidden="true">📋</span><p>Una tabla de siete filas se lee en segundos. Una de siete mil, no. Un <strong>gráfico</strong> muestra de inmediato lo que la tabla esconde.</p></div>
+      <div class="panel"><span class="n">2</span><span class="pic" aria-hidden="true">🎯</span><p>Cada pregunta tiene su gráfico: <strong>barras</strong> para comparar, <strong>líneas</strong> para el tiempo, <strong>histograma</strong> para repartos…</p></div>
+      <div class="panel"><span class="n">3</span><span class="pic" aria-hidden="true">🎭</span><p>Pero un gráfico también puede <strong>mentir</strong> con los mismos datos. Aprender a visualizar es aprender a detectarlo.</p></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ahora, pruébalo</span>
+    <div id="guide"></div>
+    <div class="bench">
+      <h3>1 · Mueve el eje y mira qué pasa</h3>
+      <p>Dos rutas para llegar a la universidad: la <strong>Ruta A</strong> tarda 50 minutos y la <strong>Ruta B</strong>, 52. Una diferencia pequeña. Ahora tú controlas dónde empieza el eje vertical.</p>
+      <div class="headline" id="head"></div>
+      <svg class="chart" id="c1" viewBox="0 0 420 270" role="img" aria-label="Gráfico de barras de la Ruta A y la Ruta B"></svg>
+      <div class="days"><label for="ax" class="sub">El eje vertical empieza en: <span class="mono lab-c" id="axv">0</span> minutos</label><input type="range" id="ax" min="0" max="49" value="0"></div>
+      <div class="meters"><div class="card-big"><span class="sub">A simple vista, B parece</span><span class="big" id="look"></span></div><div class="card-big"><span class="sub">Diferencia real</span><span class="big">4 %</span></div></div>
+      <div class="fb info" id="fb1" aria-live="polite"></div>
+    </div>
+
+    <div class="bench">
+      <div class="row" style="justify-content:space-between"><h3>2 · ¿Qué gráfico elijo?</h3><span class="pill" id="qsc"></span></div>
+      <div class="prog"><i id="qpg"></i></div>
+      <p class="q" id="qtext" style="font:700 20px var(--f-display);line-height:1.25"></p>
+      <div class="ctypes" id="ctypes"></div>
+      <div class="fb info" id="fb2" aria-live="polite"></div>
+      <div class="row" style="justify-content:flex-end"><button class="btn primary" id="qnx" hidden>Siguiente →</button></div>
+    </div>
+
+    <div class="bench">
+      <h3>3 · Arregla este gráfico</h3>
+      <p>Son los siete tiempos de viaje de la tabla limpia (Laboratorio 5.2). Alguien hizo este gráfico con <strong>cinco errores</strong>. Actívale cada buena práctica y mira cómo cambia.</p>
+      <div class="fixes" id="fixes"></div>
+      <svg class="chart" id="c3" viewBox="0 0 460 330" role="img" aria-label="Gráfico de barras de los siete tiempos de viaje"></svg>
+      <div class="fixes" id="stats"></div>
+      <div class="fb info" id="fb3" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ayuda memoria</span>
+    <div class="memo" id="memo">
+      <h3>¿Qué gráfico? ¿Es honesto?</h3>
+      <ul>
+        <li><span class="key">Comparar categorías</span> → barras · <span class="key">Cambio en el tiempo</span> → líneas</li>
+        <li><span class="key">Cómo se reparten los valores</span> → histograma · <span class="key">Relación entre dos variables</span> → dispersión</li>
+        <li><span class="key">Mediana y extremos</span> → caja · <span class="key">Muchas relaciones</span> → mapa de calor · <span class="key">Ubicación</span> → mapa</li>
+      </ul>
+      <p><span class="key">Lista del gráfico honesto</span></p><ul class="checks"><li>☐ Título que dice qué concluir</li><li>☐ Ejes con nombre y unidades</li><li>☐ Barras desde cero</li><li>☐ No depender solo del color</li><li>☐ Fuente y fecha</li></ul>
+      <p class="mn">Si el eje no empieza en cero, desconfía: una diferencia de 4 % puede parecer el doble.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Lo que acabas de aprender</span>
+    <div class="learn">
+      <div><b>El eje cuenta la historia</b><span>Cortar el eje en 48 convierte una diferencia de 2 minutos en «el doble».</span></div>
+      <div><b>Cada pregunta, su gráfico</b><span>Barras para comparar, líneas para el tiempo, dispersión para relaciones.</span></div>
+      <div><b>Mirar siempre</b><span>El 180 salta a la vista, y con él la diferencia entre promedio y mediana.</span></div>
+    </div>
+    <div class="think"><b>Para pensar</b><p>En 1854, John Snow marcó en un mapa las casas con muertos por cólera en Londres y encontró la bomba de agua culpable. Busca en una noticia o publicidad un gráfico: ¿pasa la lista del gráfico honesto? Cuando entrenes una red, la curva de error también será un gráfico que tendrás que leer con este mismo cuidado.</p></div>
+    <dl class="gloss">
+      <div><dt>Histograma</dt><dd>Barras que muestran cuántos valores caen en cada rango, por ejemplo de 0 a 20 minutos.</dd></div>
+      <div><dt>Diagrama de dispersión</dt><dd>Puntos que muestran la relación entre dos variables numéricas.</dd></div>
+      <div><dt>Diagrama de caja</dt><dd>Resume la mediana, el centro de los datos y los valores extremos.</dd></div>
+      <div><dt>Mediana</dt><dd>El valor del medio cuando se ordenan los datos. Es menos sensible a los extremos que el promedio.</dd></div>
+    </dl>
+  </section>
+</main>
+<div class="band foot-band"><div class="wrap">
+  <!--NAV-->
+  <footer><span>Datos del ejemplo del libro <em>Redes Neuronales en Mortales</em>, Capítulo I, secciones 5.5 y 5.6.</span><span>Funciona en el celular y no guarda ningún dato.</span></footer>
+</div></div>
+<script>/*COMMONJS*/
+const st={ax:0,sawDouble:false,backHonest:false,qi:0,qok:0,qans:0,lock:false,fix:[false,false,false,false,false],mean:false,med:false};
+const c=tok;
+/* 1. eje */
+function c1(){const s=st.ax,top=55,H=190,y0=230,Y=v=>y0-(v-s)/(top-s)*H,bars=[["Ruta A",50,90],["Ruta B",52,250]];
+  let g=`<line x1="60" y1="${y0}" x2="400" y2="${y0}" stroke="${c('--ink')}" stroke-width="2.5"/><line x1="60" y1="30" x2="60" y2="${y0}" stroke="${c('--ink')}" stroke-width="2.5"/>`;
+  const step=(top-s)>20?10:(top-s)>8?2:1;
+  for(let v=Math.ceil(s/step)*step;v<=top;v+=step){g+=`<line x1="55" x2="400" y1="${Y(v)}" y2="${Y(v)}" stroke="${c('--line')}" stroke-width="1"/><text x="50" y="${Y(v)+5}" text-anchor="end" font-size="13" fill="${c('--soft')}" font-family="JetBrains Mono,monospace">${v}</text>`;}
+  if(s>0)g+=`<path d="M52 ${y0-10} l16 -6 M52 ${y0-2} l16 -6" stroke="${c('--bad')}" stroke-width="3"/><text x="70" y="${y0+40}" font-size="13" fill="${c('--bad')}" font-weight="700">⚠ el eje empieza en ${s}, no en 0</text>`;
+  bars.forEach(([n,v,x],i)=>{const y=Y(v);g+=`<rect x="${x}" y="${y}" width="90" height="${y0-y}" rx="4" fill="${i?c('--lab'):c('--soft')}" stroke="${c('--ink')}" stroke-width="2"/><text x="${x+45}" y="${y-8}" text-anchor="middle" font-size="16" font-weight="700" fill="${c('--ink')}" font-family="JetBrains Mono,monospace">${v} min</text><text x="${x+45}" y="${y0+20}" text-anchor="middle" font-size="15" font-weight="700" fill="${c('--ink')}">${n}</text>`;});
+  $("c1").innerHTML=g;$("axv").textContent=s;const ratio=(52-s)/(50-s);$("look").textContent=`${fmt(ratio,ratio>1.95&&ratio<2.05?0:2)} veces A`;
+  $("head").innerHTML=ratio>=1.5?`<small>Así lo titularía una publicidad</small>¡La Ruta B tarda ${ratio>=1.95?"EL DOBLE":"muchísimo más"}!`:`<small>Titular honesto</small>Las dos rutas tardan casi lo mismo`;
+  if(s>=48){st.sawDouble=true;say($("fb1"),"sad","Con el eje en 48, la barra A mide 2 unidades y la B mide 4: <strong>¡parece el doble!</strong> Los datos no cambiaron, solo el gráfico. Ahora devuelve el eje a 0.","bad");}
+  else if(s===0){if(st.sawDouble)st.backHonest=true;say($("fb1"),"happy","Con el eje en 0 las barras muestran la verdad: 50 y 52 son casi iguales. <strong>Las barras empiezan en cero.</strong>","ok");}
+  else if(ratio>=1.2)say($("fb1"),"think","La diferencia empieza a verse exagerada. Sigue subiendo el eje y mira el titular.");
+  else say($("fb1"),"think","Todavía se ve parecido. Sube el punto donde empieza el eje.");
+  G.update(st);}
+$("ax").oninput=e=>{st.ax=+e.target.value;c1();};
+/* 2. ¿qué gráfico? */
+const CT=[["Barras",'<rect x="6" y="20" width="10" height="18"/><rect x="22" y="8" width="10" height="30"/><rect x="38" y="14" width="10" height="24"/>'],
+ ["Líneas",'<polyline points="4,32 16,22 28,26 40,10 52,14" fill="none" stroke-width="3"/>'],
+ ["Histograma",'<rect x="4" y="26" width="12" height="12"/><rect x="16" y="10" width="12" height="28"/><rect x="28" y="16" width="12" height="22"/><rect x="40" y="30" width="12" height="8"/>'],
+ ["Dispersión",'<circle cx="10" cy="30" r="3"/><circle cx="20" cy="24" r="3"/><circle cx="28" cy="20" r="3"/><circle cx="38" cy="14" r="3"/><circle cx="48" cy="8" r="3"/><circle cx="24" cy="30" r="3"/>'],
+ ["Caja",'<line x1="28" y1="4" x2="28" y2="12" stroke-width="2"/><rect x="16" y="12" width="24" height="16" fill="none" stroke-width="3"/><line x1="16" y1="20" x2="40" y2="20" stroke-width="3"/><line x1="28" y1="28" x2="28" y2="36" stroke-width="2"/>'],
+ ["Mapa de calor",'<rect x="8" y="4" width="12" height="10" opacity=".9"/><rect x="22" y="4" width="12" height="10" opacity=".4"/><rect x="36" y="4" width="12" height="10" opacity=".2"/><rect x="8" y="16" width="12" height="10" opacity=".4"/><rect x="22" y="16" width="12" height="10" opacity=".9"/><rect x="36" y="16" width="12" height="10" opacity=".6"/><rect x="8" y="28" width="12" height="10" opacity=".2"/><rect x="22" y="28" width="12" height="10" opacity=".6"/><rect x="36" y="28" width="12" height="10" opacity=".9"/>'],
+ ["Mapa",'<path d="M6 10 L20 6 L36 10 L50 6 V32 L36 36 L20 32 L6 36Z" fill="none" stroke-width="2.5"/><circle cx="24" cy="18" r="4"/><circle cx="38" cy="24" r="3"/>']];
+const QS=[["Quieres comparar cuántos estudiantes usan cada medio de transporte.",0,"Para <strong>comparar categorías</strong>, barras."],
+ ["Quieres mostrar la temperatura de La Paz hora por hora durante un día.",1,"Algo que <strong>cambia en el tiempo</strong>: líneas."],
+ ["Quieres ver cuántos viajes tardan de 0 a 20, de 20 a 40 y de 40 a 60 minutos.",2,"Para ver <strong>cómo se reparten</strong> los valores en rangos: histograma."],
+ ["Quieres saber si a mayor distancia hay mayor tiempo de viaje.",3,"La <strong>relación entre dos variables</strong>: dispersión, un punto por estudiante."],
+ ["Quieres comparar el tiempo de viaje de cada medio de transporte, con su mediana y sus valores extremos.",4,"<strong>Mediana y extremos</strong>: diagrama de caja."],
+ ["Quieres ver de qué zona de la ciudad viene cada estudiante.",6,"Datos con <strong>ubicación</strong>: un mapa."],
+ ["Quieres ver de golpe las correlaciones entre todas las columnas de la tabla.",5,"<strong>Muchas relaciones a la vez</strong>: mapa de calor."]];
+const order=shuffle(QS.map((_,i)=>i));
+function q(){const it=QS[order[st.qi]];$("qtext").textContent=it[0];st.lock=false;
+  $("ctypes").innerHTML=CT.map(([n,svg],i)=>`<button class="ct" data-i="${i}"><svg viewBox="0 0 56 40" fill="currentColor" stroke="currentColor" style="color:var(--lab)" aria-hidden="true">${svg}</svg>${n}</button>`).join("");
+  document.querySelectorAll(".ct").forEach(b=>b.onclick=()=>qa(b));$("qnx").hidden=true;
+  $("qsc").textContent=`${st.qok} de ${st.qans}`;$("qpg").style.width=(st.qans/QS.length*100)+"%";}
+function qa(b){if(st.lock)return;st.lock=true;const it=QS[order[st.qi]],good=+b.dataset.i===it[1];st.qans++;if(good)st.qok++;
+  document.querySelectorAll(".ct").forEach(x=>{x.disabled=true;if(+x.dataset.i===it[1])x.classList.add("right");});if(!good)b.classList.add("wrong");
+  say($("fb2"),good?"happy":"sad",(good?"¡Bien elegido! ":"Mejor otro. ")+it[2],good?"ok":"bad");
+  $("qsc").textContent=`${st.qok} de ${st.qans}`;$("qpg").style.width=(st.qans/QS.length*100)+"%";
+  if(st.qi<QS.length-1)$("qnx").hidden=false;else setTimeout(()=>say($("fb2"),"wow",`Terminaste con <strong>${st.qok} de ${QS.length}</strong>. La pregunta decide el gráfico, no al revés.`,"ok"),1300);G.update(st);}
+$("qnx").onclick=()=>{st.qi++;q();say($("fb2"),"think","Lee lo que quieres mostrar y elige el gráfico.");};
+/* 3. arregla el gráfico */
+const DATA=[[1,25],[2,50],[3,45],[4,15],[5,30],[7,180],[8,35]];
+const FIX=[["🏷️ Título que dice qué concluir","Un buen título dice qué se debe concluir, no solo qué se muestra."],
+ ["📐 Ejes con nombre y unidades","Sin nombre ni unidades nadie sabe si son minutos, horas o kilómetros."],
+ ["0️⃣ Barras desde cero","Con el eje en 10, la barra de 15 minutos parecía casi inexistente."],
+ ["🔤 No depender solo del color","Alrededor de uno de cada doce hombres confunde el rojo y el verde. Ahora cada barra dice su valor."],
+ ["📚 Fuente y fecha","Quien lea el gráfico debe saber de dónde salen los datos."]];
+const mean=DATA.reduce((a,d)=>a+d[1],0)/DATA.length,med=35;
+function fixes(){$("fixes").innerHTML=FIX.map(([t],i)=>`<label class="fix ${st.fix[i]?"on":""}"><input type="checkbox" data-f="${i}" ${st.fix[i]?"checked":""}>${t}</label>`).join("");
+  document.querySelectorAll("[data-f]").forEach(x=>x.onchange=e=>{const i=+x.dataset.f;st.fix[i]=e.target.checked;
+    const n=st.fix.filter(Boolean).length;
+    say($("fb3"),st.fix[i]?(n===5?"wow":"happy"):"think",st.fix[i]?(n===5?"¡Gráfico honesto! Ahora activa el promedio y la mediana de abajo para ver lo que hace el viaje de 180 minutos.":FIX[i][1]):"Quitaste una buena práctica. ¿Notas cómo el gráfico se entiende peor?",st.fix[i]?"ok":"info");fixes();c3();});
+  $("stats").innerHTML=`<label class="fix stat ${st.mean?"on":""}"><input type="checkbox" id="sm" ${st.mean?"checked":""}>➖ Mostrar el promedio</label><label class="fix stat ${st.med?"on":""}"><input type="checkbox" id="sd" ${st.med?"checked":""}>➖ Mostrar la mediana</label>`;
+  $("sm").onchange=e=>{st.mean=e.target.checked;statsFb();fixes();c3();};$("sd").onchange=e=>{st.med=e.target.checked;statsFb();fixes();c3();};}
+function statsFb(){if(st.mean&&st.med)say($("fb3"),"wow",`Promedio <strong>${fmt(mean,1)}</strong> min, mediana <strong>35</strong> min. El viaje de 180 jala el promedio hacia arriba: quien solo lea el promedio pensará que «tardamos casi una hora», cuando la mayoría tarda 35 minutos o menos. <strong>Un resumen siempre esconde algo.</strong>`,"ok");
+  else if(st.mean)say($("fb3"),"think",`El promedio es 380 ÷ 7 ≈ <strong>${fmt(mean,1)}</strong> minutos. Fíjate cuántas barras quedan por debajo de esa línea. Activa también la mediana.`);
+  else if(st.med)say($("fb3"),"think","La mediana es el valor del medio: ordenados, 15, 25, 30, <strong>35</strong>, 45, 50, 180. Activa también el promedio para comparar.");}
+function c3(){const [tit,axes,zero,lab,src]=st.fix,base=zero?0:10,top=190,x0=70,y0=270,H=220,Y=v=>y0-Math.max(0,v-base)/(top-base)*H,bw=40,gap=14;
+  let g=`<text x="230" y="22" text-anchor="middle" font-size="${tit?15:16}" font-weight="700" fill="${c('--ink')}">${tit?"Un viaje de 180 minutos (día de bloqueo) se sale de lo normal":"Gráfico 1"}</text>`;
+  g+=`<line x1="${x0}" y1="${y0}" x2="450" y2="${y0}" stroke="${c('--ink')}" stroke-width="2"/><line x1="${x0}" y1="40" x2="${x0}" y2="${y0}" stroke="${c('--ink')}" stroke-width="2"/>`;
+  for(let v=base;v<=top;v+=zero?30:30){const vv=zero?v:v;g+=`<line x1="${x0-5}" x2="450" y1="${Y(vv)}" y2="${Y(vv)}" stroke="${c('--line')}"/><text x="${x0-8}" y="${Y(vv)+4}" text-anchor="end" font-size="12" fill="${c('--soft')}" font-family="JetBrains Mono,monospace">${vv}</text>`;}
+  DATA.forEach(([id,v],i)=>{const x=x0+16+i*(bw+gap),y=Y(v),col=lab?(v>100?c('--lab'):c('--soft')):(v>=40?"#D93A3F":"#22A04B");
+    g+=`<rect x="${x}" y="${y}" width="${bw}" height="${y0-y}" fill="${col}" stroke="${c('--ink')}" stroke-width="1.5" rx="3"/>`;
+    if(lab)g+=`<text x="${x+bw/2}" y="${y-6}" text-anchor="middle" font-size="13" font-weight="700" fill="${c('--ink')}" font-family="JetBrains Mono,monospace">${v}</text>`;
+    g+=`<text x="${x+bw/2}" y="${y0+16}" text-anchor="middle" font-size="12" fill="${c('--soft')}" font-family="JetBrains Mono,monospace">${axes?"id "+id:""}</text>`;});
+  if(!lab)g+=`<rect x="330" y="44" width="12" height="12" fill="#D93A3F"/><text x="346" y="54" font-size="12" fill="${c('--ink')}">lento</text><rect x="388" y="44" width="12" height="12" fill="#22A04B"/><text x="404" y="54" font-size="12" fill="${c('--ink')}">rápido</text>`;
+  if(axes){g+=`<text x="18" y="${(40+y0)/2}" transform="rotate(-90 18 ${(40+y0)/2})" text-anchor="middle" font-size="13" font-weight="700" fill="${c('--ink')}">Tiempo de viaje (minutos)</text><text x="260" y="${y0+34}" text-anchor="middle" font-size="13" font-weight="700" fill="${c('--ink')}">Estudiante</text>`;}
+  if(st.mean){const y=Y(mean);g+=`<line x1="${x0}" x2="450" y1="${y}" y2="${y}" stroke="${c('--spark')}" stroke-width="3" stroke-dasharray="8 5"/><line x1="${x0+10}" x2="${x0+34}" y1="44" y2="44" stroke="${c('--spark')}" stroke-width="3" stroke-dasharray="6 4"/><text x="${x0+40}" y="49" font-size="13" font-weight="700" fill="${c('--spark-ink')}">promedio ${fmt(mean,1)}</text>`;}
+  if(st.med){const y=Y(med);g+=`<line x1="${x0}" x2="450" y1="${y}" y2="${y}" stroke="${c('--blue')}" stroke-width="3"/><line x1="${x0+150}" x2="${x0+174}" y1="44" y2="44" stroke="${c('--blue')}" stroke-width="3"/><text x="${x0+180}" y="49" font-size="13" font-weight="700" fill="${c('--blue')}">mediana 35</text>`;}
+  if(src)g+=`<text x="${x0}" y="${y0+54}" font-size="11" fill="${c('--soft')}">Fuente: encuesta del curso, tabla limpia del Lab. 5.2 · 2026</text>`;
+  $("c3").innerHTML=g;G.update(st);}
+const G=Guide($("guide"),{
+ intro:"¡Hola! Soy <strong>Chispa</strong>. Hoy vas a ser detective de gráficos: vas a hacer que uno mienta, a elegir el correcto para cada pregunta y a arreglar uno mal hecho.",
+ missions:[
+  {text:"En la parte 1, mueve el eje hasta que la Ruta B <strong>parezca el doble</strong> de la Ruta A.",hint:"Arrastra el deslizador hacia la derecha. Mira el recuadro «A simple vista, B parece».",done:s=>s.sawDouble,ok:"Lo lograste: con los mismos datos, una diferencia de 4 % parece el doble. Así se engaña en noticias y publicidad."},
+  {text:"Ahora devuelve el eje a <strong>0</strong> para que el gráfico vuelva a ser honesto.",hint:"Arrastra el deslizador todo a la izquierda.",done:s=>s.backHonest,ok:"Las barras empiezan en cero: es la regla que más se rompe, y se rompe para engañar."},
+  {text:"En la parte 2, responde al menos <strong>5 preguntas</strong> de «¿Qué gráfico elijo?».",hint:"Comparar = barras. Tiempo = líneas. Relación = dispersión.",done:s=>s.qans>=5,ok:s=>`Llevas ${s.qok} de ${s.qans}. La pregunta decide el gráfico.`},
+  {text:"En la parte 3, activa las <strong>cinco buenas prácticas</strong> para arreglar el gráfico.",hint:"Son las cinco casillas que están sobre el gráfico.",done:s=>s.fix.every(Boolean),ok:"Ahora el gráfico se entiende solo, sin trampas y para todas las personas."},
+  {text:"Activa el <strong>promedio</strong> y la <strong>mediana</strong> y compáralos.",hint:"Son las dos casillas debajo del gráfico.",done:s=>s.mean&&s.med,ok:"54,3 contra 35: la barra de 180 salta a la vista y explica la diferencia. Por eso siempre hay que mirar el gráfico."}],
+ finale:"¡Laboratorio completo! Terminaste el viaje del dato: de ocho respuestas desordenadas a un gráfico honesto. Lo que sigue es enseñarle a una máquina a aprender de ellos (sección 6)."});
+G.onMission=()=>G.update(st);
+q();say($("fb2"),"think","Lee lo que quieres mostrar y elige el gráfico.");fixes();say($("fb3"),"think","Activa una buena práctica a la vez y mira qué cambia.");c3();c1();
+onTheme(()=>{c1();c3();});
+</script>

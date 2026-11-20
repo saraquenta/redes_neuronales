@@ -1,0 +1,219 @@
+<title>¿Quién le enseña a la red? · Laboratorio 11.4</title>
+<!--HEAD-->
+<style>/*COMMON*/
+:root{--lab:#A16207;--pattern:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M24 8c10 6 12 20 0 32C12 28 14 14 24 8z' fill='none' stroke='%23A16207' stroke-opacity='.15' stroke-width='2'/%3E%3C/svg%3E")}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--lab:#FACC15}}
+:root[data-theme="dark"]{--lab:#FACC15}
+.leaves{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.leaf{background:var(--card);border:2px solid var(--ink);border-radius:14px;box-shadow:3px 3px 0 var(--ink);padding:10px;display:flex;flex-direction:column;gap:6px}
+.leaf svg{width:100%;height:auto;background:#EEF3E6;border-radius:10px}
+.leaf .nm{font:700 13px var(--f-mono);color:var(--soft)}
+.leaf select{font:700 15px var(--f-body);padding:8px;border-radius:10px;border:2px solid var(--line);background:var(--paper);color:var(--ink);min-height:44px}
+.leaf.ok{border-color:var(--ok);box-shadow:3px 3px 0 var(--ok)} .leaf.no{border-color:var(--bad);box-shadow:3px 3px 0 var(--bad)}
+.leaf .why{font-size:13px;line-height:1.35}
+.guide-box{border:2px dashed var(--lab);border-radius:14px;padding:12px 14px;background:color-mix(in srgb,var(--lab) 8%,var(--card));font-size:15px}
+.guide-box ul{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.sim{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start}
+@media (max-width:720px){.sim{grid-template-columns:1fr}}
+#plot{width:100%;display:block;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.ctl{display:flex;flex-direction:column;gap:12px}
+.score2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.score2 .card-big .big{font-size:30px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--soft)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+</style>
+<header class="band hero-band">
+  <div class="wrap hero">
+    <div class="hero-text">
+      <span class="book">Redes Neuronales en Mortales · Capítulo II · Sección 11</span>
+      <span class="tag">Laboratorio 11.4</span>
+      <h1>¿Quién le enseña a la red?</h1>
+      <p class="lede">Una red neuronal no sabe qué es el tizón: sabe lo que sus etiquetas dicen que es el tizón. Aquí vas a etiquetar hojas de papa como un agrónomo y a comprobar qué aprende una neurona cuando las etiquetas se equivocan.</p>
+      <div class="meta"><span>⏱ 8 minutos</span><span>Solo mirar hojas y mover un deslizador</span></div>
+    </div>
+    <div class="art" aria-hidden="true">
+      <svg class="scene" viewBox="0 0 220 190">
+        <path d="M110 18 C170 40 190 110 110 176 C30 110 50 40 110 18Z" fill="#5B9E3C" stroke="var(--ink)" stroke-width="3"/>
+        <path d="M110 30 V170 M110 70 L80 52 M110 95 L74 80 M110 120 L80 108 M110 70 L140 52 M110 95 L146 80 M110 120 L140 108" stroke="#2F6B1E" stroke-width="3" fill="none"/>
+        <ellipse cx="150" cy="96" rx="20" ry="15" fill="#F2D35B" opacity=".8"/><path d="M140 88 q10 -6 18 2 q6 10 -4 16 q-12 4 -16 -6z" fill="#3B2A1A"/>
+        <ellipse cx="80" cy="128" rx="14" ry="11" fill="#F2D35B" opacity=".8"/><path d="M73 122 q8 -4 13 2 q3 8 -4 11 q-9 2 -10 -5z" fill="#3B2A1A"/>
+        <g transform="rotate(12 175 150)"><rect x="140" y="136" width="70" height="30" rx="6" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/><circle cx="150" cy="151" r="4" fill="var(--ink)"/><text x="182" y="156" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="800" fill="var(--ink)">¿TIZÓN?</text></g>
+      </svg>
+      <div data-chispa="think" class="chispa-mini"></div>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="sec">
+    <span class="kicker">Primero, la idea</span>
+    <div class="strip">
+      <div class="panel"><span class="n">1</span><span class="pic" aria-hidden="true">🏷️</span><p>En el aprendizaje supervisado cada ejemplo trae su <strong>etiqueta</strong>: la respuesta que la red debe aprender a dar.</p></div>
+      <div class="panel"><span class="n">2</span><span class="pic" aria-hidden="true">📋</span><p>Para que dos personas etiqueten igual, se escribe una <strong>guía de etiquetado</strong>: qué cuenta como cada clase y qué hacer si hay dudas.</p></div>
+      <div class="panel"><span class="n">3</span><span class="pic" aria-hidden="true">⚠️</span><p>Los errores <strong>al azar</strong> se diluyen con muchos datos. Los errores <strong>sistemáticos</strong> enseñan una regla equivocada.</p></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ahora, pruébalo</span>
+    <div id="guide"></div>
+    <div class="bench">
+      <h3>1 · Etiqueta como agrónomo</h3>
+      <p>Una cooperativa del altiplano te pide etiquetar nueve fotos de hojas de papa. Elige una etiqueta para cada una. Si dudas, abre la guía: no adivines.</p>
+      <div class="row"><button class="btn" id="gbtn" aria-expanded="false">📋 Ver la guía de etiquetado</button></div>
+      <div class="guide-box" id="gbox" hidden>
+        <strong>Guía de etiquetado: hojas de papa</strong>
+        <ul>
+          <li><strong>Tizón:</strong> manchas irregulares marrón oscuro o negras, que suelen empezar en bordes o puntas, a menudo con un halo verde pálido o amarillento. En días húmedos, pelusa blanca en el revés de la hoja.</li>
+          <li><strong>Otro problema:</strong> helada (hoja ennegrecida de golpe, sin halo), manchas con anillos como una diana (tizón temprano), agujeros de insectos o bordes secos por sequía.</li>
+          <li><strong>Sana:</strong> verde, sin manchas.</li>
+          <li><strong>Duda:</strong> si no estás seguro, márcala como duda y la revisa otro agrónomo.</li>
+          <li><strong>Descartar:</strong> foto borrosa, de otra planta o donde no se ve la hoja.</li>
+        </ul>
+      </div>
+      <div class="leaves" id="leaves"></div>
+      <div class="row" style="justify-content:space-between"><span class="pill" id="lcount"></span><button class="btn primary" id="cmp" disabled>Comparar con la agrónoma</button></div>
+      <div class="fb info" id="fb1" aria-live="polite"></div>
+    </div>
+
+    <div class="bench">
+      <h3>2 · ¿Qué aprende una neurona con etiquetas malas?</h3>
+      <p>Cada punto es una hoja descrita con dos números: cuánta parte de la hoja tiene manchas y qué tan húmedo estaba el día. Una sola neurona (sección 10.2) aprende a separar hojas <strong>sanas</strong> de hojas <strong>con tizón</strong>. Después la evaluamos con 1 000 hojas nuevas bien etiquetadas.</p>
+      <div class="sim">
+        <div>
+          <svg id="plot" viewBox="0 0 420 340" role="img" aria-label="Hojas de entrenamiento y la frontera que aprendió la neurona"></svg>
+          <div class="legend"><span><i style="background:#2E8B57"></i>etiquetada sana</span><span><i style="background:#B45309"></i>etiquetada con tizón</span><span><i style="background:transparent;border:2px solid #D93A3F"></i>etiqueta equivocada</span><span>— frontera aprendida · - - frontera con etiquetas limpias</span></div>
+        </div>
+        <div class="ctl">
+          <div class="days"><span class="sub">¿Cuántas hojas para entrenar?</span><div class="seg" role="group"><button data-n="200" aria-pressed="true">200</button><button data-n="30" aria-pressed="false">Solo 30</button></div></div>
+          <div class="days"><span class="sub">Tipo de error</span><div class="seg" role="group"><button data-t="rand" aria-pressed="true">Descuidos al azar</button><button data-t="sys" aria-pressed="false">Criterio equivocado</button></div></div>
+          <div class="days"><label for="noise" class="sub">Etiquetas equivocadas: <span class="mono lab-c" id="nv">0 %</span></label><input type="range" id="noise" min="0" max="40" step="5" value="0"></div>
+          <button class="btn" id="resample">🎲 Otra muestra de hojas</button>
+          <div class="score2"><div class="card-big"><span class="sub">Con etiquetas limpias</span><span class="big mono" id="a0"></span></div><div class="card-big"><span class="sub">Con tus errores</span><span class="big mono" id="a1"></span></div></div>
+        </div>
+      </div>
+      <div class="fb info" id="fb2" aria-live="polite"></div>
+      <p class="muted" style="font-size:14px">Simulación con datos inventados para mostrar la idea. «Criterio equivocado» significa que el etiquetador marca como tizón las hojas sanas más manchadas, por ejemplo las dañadas por la helada.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ayuda memoria</span>
+    <div class="memo" id="memo">
+      <h3>Etiquetas que enseñan bien</h3>
+      <ul>
+        <li><span class="key">Una red supervisada</span> nunca es mejor que sus etiquetas.</li>
+        <li><span class="key">La guía</span> define cada clase, separa los casos parecidos y permite marcar dudas.</li>
+        <li><span class="key">Acuerdo:</span> dos personas etiquetan lo mismo por separado; los desacuerdos mejoran la guía.</li>
+      </ul>
+      <p class="mn">Error al azar → se diluye si hay muchos datos.<br>Error sistemático → la red aprende la regla equivocada.</p>
+      <p class="mn">Una etiqueta adivinada hace más daño que una foto descartada.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Lo que acabas de aprender</span>
+    <div class="learn">
+      <div><b>La red imita etiquetas</b><span>Si la helada se etiqueta como tizón, la red aprende que la helada es tizón.</span></div>
+      <div><b>Permiso para no saber</b><span>La opción «duda» evita etiquetas adivinadas, que son las que más daño hacen.</span></div>
+      <div><b>No todos los errores pesan igual</b><span>Con muchos datos los descuidos se diluyen; un criterio equivocado mueve la frontera.</span></div>
+    </div>
+    <div class="think"><b>Para pensar</b><p>En 2021 se estimó que al menos el 6 % de las etiquetas de validación de ImageNet estaban equivocadas. Si tú fueras a etiquetar 5 000 fotos para la cooperativa, ¿cómo organizarías el trabajo para equivocarte lo menos posible?</p></div>
+    <dl class="gloss">
+      <div><dt>Etiqueta</dt><dd>Respuesta correcta que acompaña a un ejemplo y que la red debe aprender a dar.</dd></div>
+      <div><dt>Guía de etiquetado</dt><dd>Documento que define cada clase, con ejemplos, y dice qué hacer en caso de duda.</dd></div>
+      <div><dt>Error sistemático</dt><dd>Error que repite un mismo criterio equivocado y enseña una regla falsa.</dd></div>
+      <div><dt>Frontera de decisión</dt><dd>Línea que separa los casos que la neurona clasifica en una clase o en la otra.</dd></div>
+    </dl>
+  </section>
+</main>
+<div class="band foot-band"><div class="wrap">
+  <!--NAV-->
+  <footer><span>Ejemplo propio del equipo del libro <em>Redes Neuronales en Mortales</em>, Capítulo II, sección 11.4.</span><span>Funciona en el celular y no guarda ningún dato. Las hojas son dibujos, no fotos reales.</span></footer>
+</div></div>
+<script>/*COMMONJS*/
+/* ---------- 1. hojas ---------- */
+const OPTS=["","Sana","Tizón","Otro problema","Duda","Descartar"];
+const LEAVES=[
+ {k:"sana",ans:"Sana",why:"Verde y sin manchas."},
+ {k:"tizon",ans:"Tizón",why:"Manchas oscuras irregulares desde el borde, con halo amarillento."},
+ {k:"helada",ans:"Otro problema",why:"Ennegrecida de golpe en la parte superior, sin halo: daño por helada."},
+ {k:"diana",ans:"Otro problema",why:"Manchas con anillos como una diana: tizón temprano, otra enfermedad."},
+ {k:"pelusa",ans:"Tizón",why:"Revés de la hoja con pelusa blanca junto a manchas oscuras: tizón en día húmedo."},
+ {k:"borrosa",ans:"Descartar",why:"No se distingue nada: una foto así no enseña, confunde."},
+ {k:"insectos",ans:"Otro problema",why:"Agujeros redondos: daño de insectos."},
+ {k:"dudosa",ans:"Duda",why:"Una sola manchita, sin halo claro. Mejor que la vea un segundo agrónomo."},
+ {k:"sequia",ans:"Otro problema",why:"Bordes secos y amarillentos parejos: falta de agua."}];
+function leafSVG(k,i){
+  const base=`<path d="M60 8 C98 22 106 70 60 112 C14 70 22 22 60 8Z" fill="${k==="sequia"?"#8DB04A":"#5B9E3C"}" stroke="#24461A" stroke-width="2"/><path d="M60 16 V106 M60 40 L42 30 M60 58 L38 48 M60 76 L42 68 M60 40 L78 30 M60 58 L82 48 M60 76 L78 68" stroke="#2F6B1E" stroke-width="2" fill="none"/>`;
+  let ex="";
+  if(k==="tizon")ex=`<ellipse cx="82" cy="52" rx="15" ry="12" fill="#F2D35B" opacity=".85"/><path d="M73 46 q9 -6 16 1 q5 9 -3 14 q-11 3 -14 -6z" fill="#3B2A1A"/><ellipse cx="44" cy="80" rx="11" ry="9" fill="#F2D35B" opacity=".85"/><path d="M38 76 q7 -4 11 1 q3 7 -3 9 q-8 2 -9 -4z" fill="#3B2A1A"/>`;
+  if(k==="helada")ex=`<path d="M60 8 C80 16 92 30 96 44 C76 50 44 50 24 44 C28 30 40 16 60 8Z" fill="#1F2A1C" opacity=".92"/>`;
+  if(k==="diana")ex=[[78,50],[44,72]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="10" fill="#7A4E2A"/><circle cx="${x}" cy="${y}" r="7" fill="none" stroke="#3B2A1A" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="3.5" fill="none" stroke="#3B2A1A" stroke-width="1.5"/>`).join("");
+  if(k==="pelusa")ex=`<path d="M60 8 C98 22 106 70 60 112 C14 70 22 22 60 8Z" fill="#8FB97A"/><path d="M74 46 q12 -8 19 2 q6 12 -6 17 q-14 3 -15 -9z" fill="#3B2A1A"/>`+[[70,40],[76,36],[83,38],[89,42],[93,48],[72,47],[79,45],[86,49],[91,55],[74,55],[81,54],[88,60],[77,61],[84,66],[70,62],[66,52],[95,40],[80,70]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.6" fill="#fff" opacity=".95"/><circle cx="${x+2}" cy="${y+2}" r="1.6" fill="#fff" opacity=".8"/>`).join("")+`<text x="60" y="104" text-anchor="middle" font-size="9" font-family="monospace" fill="#24461A">revés</text>`;
+  if(k==="insectos")ex=[[50,40],[72,58],[46,74],[66,86],[78,36]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="5" fill="#EEF3E6" stroke="#24461A" stroke-width="1"/>`).join("");
+  if(k==="sequia")ex=`<path d="M60 8 C98 22 106 70 60 112 C14 70 22 22 60 8Z" fill="none" stroke="#C9A227" stroke-width="9" opacity=".9"/>`;
+  if(k==="dudosa")ex=`<circle cx="76" cy="62" r="3.5" fill="#4A3826"/>`;
+  const blur=k==="borrosa"?`<defs><filter id="bl${i}"><feGaussianBlur stdDeviation="6"/></filter></defs><g filter="url(#bl${i})">`:"<g>";
+  return `<svg viewBox="0 0 120 120" aria-hidden="true">${blur}${base}${ex}</g></svg>`;}
+const st={lab:LEAVES.map(()=>""),compared:false,agree:0,n:200,t:"rand",noise:0,seed:7,tried:{r20:false,s20:false,few:false}};
+function leaves(){
+  $("leaves").innerHTML=LEAVES.map((L,i)=>{const v=st.lab[i],c=st.compared&&v?(v===L.ans?"ok":"no"):"";
+    return `<div class="leaf ${c}">${leafSVG(L.k,i)}<span class="nm">Foto ${i+1}</span><select data-i="${i}" aria-label="Etiqueta de la foto ${i+1}">${OPTS.map(o=>`<option ${o===v?"selected":""} value="${o}">${o||"Elige…"}</option>`).join("")}</select>${st.compared&&v?`<span class="why">${v===L.ans?"✓ ":"✗ La agrónoma eligió «"+L.ans+"». "}${L.why}</span>`:""}</div>`;}).join("");
+  document.querySelectorAll(".leaf select").forEach(s=>s.onchange=()=>{st.lab[+s.dataset.i]=s.value;if(st.compared)compare();else leaves();});
+  const n=st.lab.filter(Boolean).length;$("lcount").textContent=`${n} de ${LEAVES.length} etiquetadas`;$("cmp").disabled=n<LEAVES.length;G.update(st);}
+function compare(){st.compared=true;st.agree=LEAVES.filter((L,i)=>st.lab[i]===L.ans).length;leaves();
+  const a=st.agree,tot=LEAVES.length;
+  if(a===tot)say($("fb1"),"wow",`¡Coincides en las ${tot} fotos! Tu criterio y el de la agrónoma son el mismo. Así se ve una guía que funciona.`,"ok");
+  else if(a>=7)say($("fb1"),"happy",`Coinciden en ${a} de ${tot} (${Math.round(a/tot*100)} %). Lee por qué difieren en las fotos marcadas en rojo: cada desacuerdo es una regla que hay que aclarar en la guía. Puedes cambiar tus etiquetas.`,"ok");
+  else say($("fb1"),"sad",`Coinciden en ${a} de ${tot}. Con tantos desacuerdos, la red recibiría mensajes contradictorios. Abre la guía y vuelve a revisar las fotos en rojo.`,"bad");
+  G.update(st);}
+$("cmp").onclick=compare;
+$("gbtn").onclick=()=>{const h=$("gbox").hidden;$("gbox").hidden=!h;$("gbtn").setAttribute("aria-expanded",h);$("gbtn").textContent=h?"📋 Ocultar la guía":"📋 Ver la guía de etiquetado";};
+/* ---------- 2. simulación ---------- */
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+const clip=x=>Math.max(0,Math.min(1,x));
+function data(n,r){const P=[];for(let i=0;i<n;i++){const y=r()<.5?1:0;P.push({x1:clip(y?.62+.14*gauss(r):.32+.14*gauss(r)),x2:clip(y?.65+.15*gauss(r):.40+.15*gauss(r)),y});}return P;}
+function fit(P,key){const n=P.length,m1=P.reduce((a,p)=>a+p.x1,0)/n,m2=P.reduce((a,p)=>a+p.x2,0)/n;
+  const s1=Math.sqrt(P.reduce((a,p)=>a+(p.x1-m1)**2,0)/n)||1,s2=Math.sqrt(P.reduce((a,p)=>a+(p.x2-m2)**2,0)/n)||1;
+  let w1=0,w2=0,b=0;for(let e=0;e<1500;e++){let g1=0,g2=0,gb=0;for(const p of P){const z1=(p.x1-m1)/s1,z2=(p.x2-m2)/s2,pr=1/(1+Math.exp(-(w1*z1+w2*z2+b))),g=pr-p[key];g1+=g*z1;g2+=g*z2;gb+=g;}w1-=.5*g1/n;w2-=.5*g2/n;b-=.5*gb/n;}
+  return {W1:w1/s1,W2:w2/s2,B:b-w1*m1/s1-w2*m2/s2};}
+const pred=(m,p)=>m.W1*p.x1+m.W2*p.x2+m.B>0?1:0;
+const TEST=data(1000,rng(9999));
+const acc=m=>TEST.filter(p=>pred(m,p)===p.y).length/TEST.length;
+function simulate(){const r=rng(st.seed),P=data(st.n,r),k=Math.round(st.noise/100*st.n);P.forEach(p=>{p.yn=p.y;p.flip=false;});
+  if(st.t==="rand"){const idx=P.map((_,i)=>i);for(let i=idx.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}idx.slice(0,k).forEach(i=>{P[i].yn=1-P[i].y;P[i].flip=true;});}
+  else{const sanas=P.filter(p=>p.y===0).sort((a,b)=>b.x1-a.x1);sanas.slice(0,k).forEach(p=>{p.yn=1;p.flip=true;});}
+  const m0=fit(P,"y"),m1=fit(P,"yn");return {P,m0,m1,a0:acc(m0),a1:acc(m1),k};}
+function draw(){const S=simulate(),c=tok,X=v=>40+v*360,Y=v=>300-v*270;
+  let g=`<clipPath id="cp"><rect x="40" y="30" width="360" height="270"/></clipPath><rect x="40" y="30" width="360" height="270" fill="none" stroke="${c('--line')}"/>`;
+  for(let t=0;t<=1;t+=.25)g+=`<text x="${X(t)}" y="318" text-anchor="middle" font-size="11" fill="${c('--soft')}">${Math.round(t*100)}%</text><text x="34" y="${Y(t)+4}" text-anchor="end" font-size="11" fill="${c('--soft')}">${Math.round(t*100)}%</text>`;
+  g+=`<text x="220" y="336" text-anchor="middle" font-size="12" font-weight="700" fill="${c('--ink')}">Parte de la hoja con manchas</text><text x="12" y="165" transform="rotate(-90 12 165)" text-anchor="middle" font-size="12" font-weight="700" fill="${c('--ink')}">Humedad del día</text>`;
+  const line=(m,dash,col,w)=>{const pts=[];for(const x of [0,1]){if(Math.abs(m.W2)>1e-9){const y=-(m.W1*x+m.B)/m.W2;pts.push([x,y]);}}
+    if(pts.length<2)return "";return `<line clip-path="url(#cp)" x1="${X(pts[0][0])}" y1="${Y(pts[0][1])}" x2="${X(pts[1][0])}" y2="${Y(pts[1][1])}" stroke="${col}" stroke-width="${w}" ${dash?'stroke-dasharray="7 6"':""}/>`;};
+  S.P.forEach(p=>{const col=p.yn?"#B45309":"#2E8B57";g+=`<circle cx="${X(p.x1)}" cy="${Y(p.x2)}" r="${st.n>100?4:6}" fill="${col}" opacity=".85"/>`;if(p.flip)g+=`<circle cx="${X(p.x1)}" cy="${Y(p.x2)}" r="${st.n>100?7:9}" fill="none" stroke="#D93A3F" stroke-width="2"/>`;});
+  g+=line(S.m0,true,c('--soft'),2.5)+line(S.m1,false,c('--ink'),3.5);
+  $("plot").innerHTML=g;$("a0").textContent=Math.round(S.a0*100)+"%";$("a1").textContent=Math.round(S.a1*100)+"%";$("nv").textContent=st.noise+" %";
+  const d=Math.round((S.a0-S.a1)*100);
+  if(st.noise===0)say($("fb2"),"happy","Sin errores, la neurona aprende una frontera que separa bastante bien las hojas sanas de las enfermas. Sube las etiquetas equivocadas.");
+  else if(st.t==="rand"&&st.n>=200){st.tried.r20||=st.noise>=20;say($("fb2"),d<=3?"wow":"think",`${S.k} descuidos al azar entre ${st.n} hojas y la precisión ${d<=0?"no cambia":"baja solo "+d+" punto"+(d===1?"":"s")}. Los descuidos tiran para los dos lados y se cancelan: con muchos datos, los aciertos ganan. Ahora prueba «Criterio equivocado» con el mismo porcentaje.`,d<=3?"ok":"info");}
+  else if(st.t==="rand"){st.tried.few||=st.noise>=20;say($("fb2"),d>=4?"sad":"think",`Con solo ${st.n} hojas, ${S.k} descuidos pesan mucho más: la precisión baja ${d} punto${d===1?"":"s"} y la frontera se tuerce. Prueba «Otra muestra»: con pocos datos, el resultado cambia mucho de una vez a otra.`,d>=4?"bad":"info");}
+  else{st.tried.s20||=st.noise>=20;say($("fb2"),d>=5?"sad":"think",`${S.k} hojas sanas muy manchadas (como las de la helada) etiquetadas como tizón. La precisión baja ${d} punto${d===1?"":"s"}: la frontera se corrió hacia las sanas. No es ruido, es una <strong>regla equivocada</strong> que la neurona aprendió.`,d>=5?"bad":"info");}
+  G.update(st);}
+$("noise").oninput=e=>{st.noise=+e.target.value;draw();};
+document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>{st.n=+b.dataset.n;document.querySelectorAll("[data-n]").forEach(x=>x.setAttribute("aria-pressed",x===b));draw();});
+document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{st.t=b.dataset.t;document.querySelectorAll("[data-t]").forEach(x=>x.setAttribute("aria-pressed",x===b));draw();});
+$("resample").onclick=()=>{st.seed=Math.floor(Math.random()*1e6);draw();};
+const G=Guide($("guide"),{
+ intro:"¡Hola! Soy <strong>Chispa</strong>. Yo aprendo lo que me enseñan las etiquetas, aunque estén mal. Primero vas a etiquetar hojas como un agrónomo y después vas a ver qué me pasa cuando las etiquetas se equivocan.",
+ missions:[
+  {text:"Etiqueta las <strong>9 fotos</strong> y toca «Comparar con la agrónoma».",hint:"Si dudas, abre la guía. Y recuerda que existe la opción «Duda».",done:s=>s.compared,ok:s=>`Coincidiste en ${s.agree} de 9. Cada desacuerdo muestra una regla que la guía debe dejar más clara.`},
+  {text:"Corrige tus etiquetas hasta coincidir en al menos <strong>8 de 9</strong> fotos.",hint:"Fíjate en el halo amarillo (tizón), los anillos de diana (tizón temprano) y la hoja ennegrecida sin halo (helada).",done:s=>s.compared&&s.agree>=8,ok:"¡Muy bien! Ahora tus etiquetas y las de la agrónoma dicen lo mismo: la red recibiría un mensaje claro."},
+  {text:"En la parte 2, con 200 hojas y «Descuidos al azar», sube las etiquetas equivocadas al <strong>20 %</strong> o más.",hint:"Mueve el deslizador hacia la derecha y mira las dos tarjetas de precisión.",done:s=>s.tried.r20,ok:"Los descuidos al azar casi no movieron la frontera: con muchos datos, se diluyen."},
+  {text:"Cambia a <strong>«Criterio equivocado»</strong> con el 20 % o más.",hint:"Es el segundo botón de «Tipo de error».",done:s=>s.tried.s20,ok:"Mismo número de errores, mucho más daño: la neurona aprendió que algunas hojas sanas son tizón."},
+  {text:"Último: vuelve a «Descuidos al azar» pero con <strong>solo 30 hojas</strong> y el 20 % de errores.",hint:"Toca «Solo 30» y luego «Descuidos al azar».",done:s=>s.tried.few,ok:"Con pocos datos, hasta los descuidos al azar hacen daño. Por eso en proyectos pequeños cada etiqueta cuenta."}],
+ finale:"¡Laboratorio completo! Una red <strong>nunca es mejor que sus etiquetas</strong>. Una buena guía evita los errores sistemáticos, y muchos datos ayudan a diluir los descuidos."});
+G.onMission=()=>G.update(st);
+leaves();draw();say($("fb1"),"think","Elige una etiqueta para cada foto. La opción «Duda» también vale.");
+onTheme(draw);
+</script>

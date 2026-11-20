@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Laboratorio 14.1: Una red ya entrenada frente a tu letra, una llama y un cuadro negro."><meta name="theme-color" content="#F2F5FB"></head><body><title>Dibuja un número · Laboratorio 14.1</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>/* Layout: cuaderno de laboratorio sobre papel cuadriculado; una columna de lectura con "viñetas", guía y banco de pruebas */
+:root{
+  --paper:#F2F5FB; --grid:#E1E7F3; --card:#FFFFFF; --ink:#0A2540; --soft:#4A5B76; --line:#D3DCEB;
+  --blue:#1D4ED8; --blue-soft:#E2EAFD; --spark:#F59E0B; --spark-soft:#FEF0D2; --spark-ink:#9A5B00;
+  --ok:#0F8A47; --ok-soft:#D9F3E4; --bad:#D93A3F; --bad-soft:#FDE2E2; --lab:#1D4ED8;
+  --f-display:"Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --shadow:0 2px 0 var(--line);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0C1526; --grid:#15223A; --card:#121D33; --ink:#E8EEF8; --soft:#A3B2C9; --line:#26375A;
+  --blue:#82A6FF; --blue-soft:#1A2A52; --spark:#FFB938; --spark-soft:#3A2A0C; --spark-ink:#FFCF70;
+  --ok:#5DD68E; --ok-soft:#12331F; --bad:#FF8582; --bad-soft:#3E1717; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0C1526; --grid:#15223A; --card:#121D33; --ink:#E8EEF8; --soft:#A3B2C9; --line:#26375A;
+  --blue:#82A6FF; --blue-soft:#1A2A52; --spark:#FFB938; --spark-soft:#3A2A0C; --spark-ink:#FFCF70;
+  --ok:#5DD68E; --ok-soft:#12331F; --bad:#FF8582; --bad-soft:#3E1717; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.6}
+.wrap{max-width:780px;margin:0 auto;padding-block:24px 64px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:flex;flex-direction:column;gap:30px}
+p{margin:0} h1,h2,h3{margin:0;text-wrap:balance;font-family:var(--f-display);line-height:1.1}
+h1{font-size:clamp(34px,8vw,54px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:clamp(25px,5vw,31px);font-weight:700}
+h3{font-size:21px;font-weight:700}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--soft)}
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:16px;align-items:end}
+@media (max-width:560px){.hero{grid-template-columns:minmax(0,1fr) 96px}}
+.tag{display:inline-flex;gap:8px;align-items:center;font:700 13px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;background:var(--lab);color:var(--card);padding:5px 11px;border-radius:6px;transform:rotate(-2deg);width:max-content}
+.book{font:700 13px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.hero-text{display:flex;flex-direction:column;gap:12px}
+.lede{font-size:20px;max-width:58ch}
+.meta{display:flex;gap:8px 16px;flex-wrap:wrap;font-size:15px;color:var(--soft)}
+.chispa{width:100%;height:auto;max-width:150px}
+/* secciones */
+.sec{display:flex;flex-direction:column;gap:16px}
+.kicker{font:700 13px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--lab)}
+.prose{display:flex;flex-direction:column;gap:12px;max-width:64ch}
+/* viñetas */
+.strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.strip{grid-template-columns:1fr}}
+.panel{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;box-shadow:4px 4px 0 var(--ink)}
+.panel .n{font:800 15px var(--f-display);width:28px;height:28px;border-radius:50%;background:var(--lab);color:var(--card);display:grid;place-items:center}
+.panel .pic{font-size:44px;line-height:1.1;min-height:52px}
+.panel p{font-size:16px;line-height:1.45}
+/* banco */
+.bench{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:18px;box-shadow:var(--shadow)}
+@media (max-width:480px){.bench{padding:16px}}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{font:700 16px var(--f-body);border:2px solid var(--line);background:var(--card);color:var(--ink);padding:9px 16px;border-radius:12px;cursor:pointer;min-height:46px;transition:transform .12s,border-color .12s}
+.btn:hover{border-color:var(--blue)} .btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:var(--card)}
+.btn.spark{background:var(--spark);border-color:var(--spark);color:#2A1A00}
+.btn:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.pill{display:inline-block;font:700 13px var(--f-mono);padding:3px 10px;border-radius:99px;background:var(--blue-soft);color:var(--blue);white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.spark{background:var(--spark-soft);color:var(--spark-ink)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:16px}
+th,td{border-bottom:1px solid var(--line);padding:8px;text-align:center}
+th{font:700 12px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--soft)}
+input[type=range]{accent-color:var(--blue);width:100%;height:28px}
+/* guía */
+.guide{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;align-items:start;background:var(--blue-soft);border-radius:16px;padding:14px}
+.guide .av{width:72px;height:72px}
+.bubble{background:var(--card);border-radius:14px;padding:12px 14px;position:relative;display:flex;flex-direction:column;gap:8px;border:2px solid var(--ink)}
+.bubble::before{content:"";position:absolute;left:-10px;top:22px;width:16px;height:16px;background:var(--card);border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}
+.bubble .who{font:700 13px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--lab)}
+.bubble .msg{font-size:17px}
+.missions{display:flex;gap:6px;flex-wrap:wrap}
+.missions span{font:700 12px var(--f-mono);padding:3px 8px;border-radius:99px;background:var(--card);color:var(--soft);border:1px solid var(--line)}
+.missions span.now{border-color:var(--blue);color:var(--blue)}
+.missions span.done{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.hint{font-size:15px;color:var(--soft);border-top:1px dashed var(--line);padding-top:8px}
+@media (max-width:480px){.guide{grid-template-columns:52px minmax(0,1fr)}.guide .av{width:52px;height:52px}}
+/* glosario */
+.term{border-bottom:2px dotted var(--lab);cursor:help;font-weight:700;background:none;border-top:0;border-left:0;border-right:0;padding:0;font:inherit;font-weight:700;color:inherit}
+.tip{position:absolute;z-index:20;max-width:min(320px,calc(100vw - 32px));background:var(--ink);color:var(--paper);padding:10px 12px;border-radius:10px;font-size:15px;line-height:1.45;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+/* aprendizajes */
+.learn{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.learn{grid-template-columns:1fr}}
+.learn div{background:var(--card);border-radius:14px;padding:14px;border-top:5px solid var(--lab);display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
+.learn b{font-family:var(--f-display);font-size:19px;line-height:1.2}
+.learn span{font-size:16px;color:var(--soft)}
+.think{background:var(--spark-soft);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.think b{font-family:var(--f-display);font-size:19px;color:var(--spark-ink)}
+.gloss{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px;font-size:16px}
+@media (max-width:560px){.gloss{grid-template-columns:1fr}}
+.gloss dt{font-weight:700} .gloss dd{margin:0 0 6px;color:var(--soft)}
+footer{font-size:14px;color:var(--soft);border-top:2px dashed var(--line);padding-top:14px;display:flex;flex-direction:column;gap:4px}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes wobble{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+.pop{animation:pop .35s ease-out}
+.wob{animation:wobble .5s ease-in-out}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:640px){.panel{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;align-items:center}.panel .n{grid-row:1;grid-column:1}.panel .pic{grid-row:2;grid-column:1;font-size:36px;min-height:0}.panel p{grid-row:1 / span 2;grid-column:2}}
+.thr>span:first-child{flex-basis:100%;text-align:center}
+
+/* ====== Secciones 4 y 5: contenedor centrado de ancho máximo + fondos a pantalla completa ====== */
+body{margin:0}
+.band{width:100%}
+.band>.wrap{padding-block:28px}
+.hero-band{position:relative;overflow:hidden;border-bottom:3px solid var(--ink);
+  background-color:color-mix(in srgb,var(--lab) 14%,var(--paper));
+  background-image:var(--pattern,none),linear-gradient(180deg,transparent 60%,color-mix(in srgb,var(--lab) 10%,transparent));}
+.hero-band .hero{grid-template-columns:minmax(0,1fr) 220px;align-items:center}
+@media (max-width:640px){.hero-band .hero{grid-template-columns:1fr}.hero-band .art{max-width:240px;margin:0 auto;order:-1}}
+.art{position:relative;width:100%}
+.art svg.scene{width:100%;height:auto;display:block}
+.art .chispa-mini{position:absolute;width:34%;right:-2%;top:-4%}
+main.wrap{padding-top:30px}
+.foot-band{background:color-mix(in srgb,var(--lab) 8%,var(--card));border-top:2px dashed var(--line)}
+.foot-band .wrap{gap:16px}
+.foot-band footer{border-top:0;padding-top:0}
+/* Ayuda memoria: nota adhesiva */
+.memo{position:relative;background:#FFF6C9;color:#2B2410;border-radius:4px 4px 18px 4px;padding:22px 18px 18px;box-shadow:3px 5px 0 rgba(10,37,64,.18);transform:rotate(-.6deg);display:flex;flex-direction:column;gap:10px;border-top:10px solid color-mix(in srgb,var(--lab) 55%,#FFF6C9)}
+.memo::before{content:"📌";position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:28px}
+.memo h3{font-size:22px;color:#2B2410}
+.memo ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.memo .key{font:800 17px var(--f-display);color:color-mix(in srgb,var(--lab) 80%,#000)}
+.memo .mn{font:700 15px var(--f-mono);background:#fff;border-radius:8px;padding:8px 10px;border:1px dashed #C9B66A}
+.fab{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:30;box-shadow:3px 3px 0 var(--ink);border:2px solid var(--ink)!important;background:#FFE58A!important;color:#2B2410!important}
+dialog.memo-dlg{border:0;padding:0;background:transparent;max-width:min(560px,calc(100vw - 24px));width:100%}
+dialog.memo-dlg::backdrop{background:rgba(10,37,64,.45)}
+dialog.memo-dlg .memo{transform:none;max-height:80vh;overflow:auto}
+dialog.memo-dlg .close{align-self:flex-end}
+/* Opciones y retroalimentación */
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.opt{font:700 16px var(--f-body);text-align:left;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:10px 12px;min-height:48px;cursor:pointer;display:flex;gap:8px;align-items:center;transition:transform .12s,border-color .12s}
+.opt:hover{border-color:var(--lab)} .opt:active{transform:translateY(1px)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.opt.sel{border-color:var(--lab);background:color-mix(in srgb,var(--lab) 14%,var(--card))}
+.opt .ic{font-size:22px;line-height:1}
+.fb{display:grid;grid-template-columns:46px minmax(0,1fr);gap:10px;align-items:center;border-radius:14px;padding:10px 12px;background:var(--paper);font-size:17px;min-height:64px}
+.fb .face{width:46px;height:46px}
+.fb.ok{background:var(--ok-soft)} .fb.bad{background:var(--bad-soft)} .fb.info{background:var(--blue-soft)}
+.prog{height:12px;background:var(--paper);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.prog>i{display:block;height:100%;width:0;background:var(--lab);border-radius:99px;transition:width .35s}
+.chip{display:inline-flex;align-items:center;gap:6px;font:700 13px var(--f-mono);padding:4px 10px;border-radius:99px;background:color-mix(in srgb,var(--lab) 14%,var(--card));color:var(--ink);border:1px solid color-mix(in srgb,var(--lab) 40%,var(--line))}
+.card-big{background:var(--card);border:2px solid var(--ink);border-radius:16px;box-shadow:4px 4px 0 var(--ink);padding:16px;display:flex;flex-direction:column;gap:8px}
+.card-big .big{font:800 clamp(24px,6vw,34px) var(--f-display);line-height:1.1}
+.sub{font:700 13px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.labkick{color:var(--lab)}
+td.l,th.l{text-align:left}
+.lab-c{color:color-mix(in srgb,var(--lab) 85%,var(--ink))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .memo{background:#3A3315;color:#FFF3C4}:root:not([data-theme="light"]) .memo h3{color:#FFF3C4}:root:not([data-theme="light"]) .memo .mn{background:#2A250F;border-color:#6B5E2A}:root:not([data-theme="light"]) .memo .key{color:#FFE58A}}
+.days{display:flex;flex-direction:column;gap:6px}
+.days label{font-weight:700}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;flex-wrap:wrap}
+.seg button{font:700 15px var(--f-body);border:0;background:var(--card);color:var(--ink);padding:8px 14px;min-height:42px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--lab);color:var(--card)}
+.foot-band .wrap{padding-bottom:96px}
+.memo ul.checks{list-style:none;padding-left:4px}
+.memo .mn{font-family:var(--f-body);font-weight:700;font-size:16px}
+@media (max-width:480px){.fab{font-size:14px;min-height:40px;padding:6px 12px}}
+
+:root{--lab:#9333EA;--pattern:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Ctext x='6' y='22' font-family='monospace' font-size='16' fill='%239333EA' fill-opacity='.13'%3E7%3C/text%3E%3Ctext x='28' y='42' font-family='monospace' font-size='16' fill='%239333EA' fill-opacity='.13'%3E3%3C/text%3E%3C/svg%3E")}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--lab:#C084FC}}
+:root[data-theme="dark"]{--lab:#C084FC}
+.pad{display:grid;grid-template-columns:minmax(0,280px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:640px){.pad{grid-template-columns:1fr}}
+.draw{display:flex;flex-direction:column;gap:8px;align-items:center}
+#cv{width:100%;max-width:280px;aspect-ratio:1;background:#fff;border:3px solid var(--ink);border-radius:14px;touch-action:none;cursor:crosshair;box-shadow:4px 4px 0 var(--ink)}
+.sees{display:flex;gap:12px;align-items:center}
+#mini{width:96px;height:96px;image-rendering:pixelated;border:2px solid var(--line);border-radius:8px;background:#fff}
+.bars{display:flex;flex-direction:column;gap:5px}
+.bar{display:grid;grid-template-columns:22px minmax(0,1fr) 52px;gap:8px;align-items:center;font:700 15px var(--f-mono)}
+.bar .t{height:18px;background:var(--paper);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.bar .t i{display:block;height:100%;background:var(--soft);transition:width .25s}
+.bar.win .t i{background:var(--lab)}
+.bar .v{text-align:right;color:var(--soft);font-size:13px}
+.light{display:flex;gap:10px;align-items:center;border-radius:14px;padding:10px 12px;font-weight:700}
+.light .dot{width:22px;height:22px;border-radius:50%;flex:none;border:2px solid var(--ink)}
+.light.g{background:var(--ok-soft)} .light.g .dot{background:var(--ok)}
+.light.y{background:var(--spark-soft)} .light.y .dot{background:var(--spark)}
+.light.r{background:var(--bad-soft)} .light.r .dot{background:var(--bad)}
+.cal td,.cal th{text-align:center}
+</style>
+<header class="band hero-band">
+  <div class="wrap hero">
+    <div class="hero-text">
+      <span class="book">Redes Neuronales en Mortales · Capítulo II · Sección 14</span>
+      <span class="tag">Laboratorio 14.1</span>
+      <h1>Dibuja un número y mira qué piensa la red</h1>
+      <p class="lede">Esta red ya terminó de aprender: leyó cientos de dígitos escritos a mano y sus pesos quedaron congelados. Ahora le toca trabajar con lo que nunca vio, empezando por tu letra. ¿Te va a entender? ¿Y qué hace cuando le muestras algo que no es un número?</p>
+      <div class="meta"><span>⏱ 7 minutos</span><span>Solo dibujar con el dedo o el mouse</span></div>
+    </div>
+    <div class="art" aria-hidden="true">
+      <svg class="scene" viewBox="0 0 220 190">
+        <rect x="20" y="22" width="120" height="120" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+        <path d="M52 52 Q80 30 104 52 Q112 72 80 96 L58 122 H110" fill="none" stroke="var(--ink)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        <g stroke="var(--ink)" stroke-width="2">
+          <rect x="156" y="40" width="50" height="12" rx="3" fill="color-mix(in srgb,var(--lab) 20%,var(--card))"/><rect x="156" y="58" width="50" height="12" rx="3" fill="var(--lab)"/><rect x="156" y="76" width="50" height="12" rx="3" fill="color-mix(in srgb,var(--lab) 15%,var(--card))"/></g>
+        <rect x="156" y="58" width="44" height="12" rx="3" fill="var(--lab)"/>
+        <g font-family="JetBrains Mono,monospace" font-size="11" font-weight="700" fill="var(--ink)"><text x="146" y="50" text-anchor="end">1</text><text x="146" y="68" text-anchor="end">2</text><text x="146" y="86" text-anchor="end">3</text></g>
+        <text x="80" y="170" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="800" fill="var(--ink)">dice 2 · 97 %</text>
+      </svg>
+      <div data-chispa="happy" class="chispa-mini"></div>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="sec">
+    <span class="kicker">Primero, la idea</span>
+    <div class="strip">
+      <div class="panel"><span class="n">1</span><span class="pic" aria-hidden="true">🧊</span><p><strong>La red ya aprendió.</strong> Sus pesos están congelados: mientras responde, no aprende nada nuevo.</p></div>
+      <div class="panel"><span class="n">2</span><span class="pic" aria-hidden="true">📊</span><p><strong>Responde con probabilidades.</strong> Reparte su convencimiento entre los diez dígitos y el más alto gana.</p></div>
+      <div class="panel"><span class="n">3</span><span class="pic" aria-hidden="true">🙈</span><p><strong>No sabe decir «no sé».</strong> Aunque le muestres un garabato, siempre elige un número.</p></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ahora, pruébalo</span>
+    <div id="guide"></div>
+    <div class="bench">
+      <div class="pad">
+        <div class="draw">
+          <canvas id="cv" width="256" height="256" aria-label="Lienzo para dibujar un número"></canvas>
+          <div class="row" style="justify-content:center"><button class="btn" id="clear">🧽 Borrar</button></div>
+          <div class="sees"><canvas id="mini" width="8" height="8" aria-label="Así ve la red tu dibujo"></canvas><span class="muted" style="font-size:14px">Así lo ve la red:<br>una cuadrícula de 8 × 8, como sus datos de entrenamiento.</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="bars" id="bars"></div>
+          <div class="light" id="light"><span class="dot"></span><span id="ltext">Dibuja un número del 0 al 9.</span></div>
+          <div class="row" id="ask" hidden><span style="font-weight:700">¿Acertó?</span><button class="btn" id="yes">✅ Sí</button><button class="btn" id="no">❌ No</button></div>
+        </div>
+      </div>
+      <div><span class="sub">Muéstrale algo que nunca vio</span>
+        <div class="row" style="margin-top:6px"><button class="btn" data-p="A">🔤 Una letra A</button><button class="btn" data-p="gar">🌀 Un garabato</button><button class="btn" data-p="neg">⬛ Un cuadro negro</button><button class="btn" data-p="llama">🦙 Una llama</button></div>
+      </div>
+      <div class="fb info" id="fb" aria-live="polite"></div>
+    </div>
+
+    <div class="bench">
+      <h3>¿Cuánto vale su confianza?</h3>
+      <p>Antes de publicar este laboratorio le mostramos a la red <strong>450 dígitos que nunca había visto</strong>. Agrupamos sus respuestas según la confianza que mostró y contamos cuántas acertó.</p>
+      <div class="tablewrap"><table class="cal" id="cal"></table></div>
+      <div class="fb info" id="fb2"></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Ayuda memoria</span>
+    <div class="memo" id="memo">
+      <h3>Lo que la red nunca vio</h3>
+      <ul>
+        <li><span class="key">Parecido a lo que vio</span> → suele acertar: eso es generalizar.</li>
+        <li><span class="key">Distinto a lo que vio</span> → puede fallar, y sin avisar.</li>
+        <li><span class="key">Algo que no es un número</span> → igual elige un número, a veces con 100 % de confianza.</li>
+      </ul>
+      <p class="mn">Confianza alta no es lo mismo que verdad.<br>Revisa: cuando dice 90 %, ¿acierta 9 de cada 10?</p>
+      <p class="mn">Semáforo: verde, la red responde sola · amarillo, revisa · rojo, pide ayuda a una persona.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <span class="kicker">Lo que acabas de aprender</span>
+    <div class="learn">
+      <div><b>Generalizar tiene límites</b><span>La red entiende tu letra si se parece a la de quienes le enseñaron.</span></div>
+      <div><b>Siempre responde</b><span>No existe la opción «esto no es un número»: un garabato también recibe una respuesta.</span></div>
+      <div><b>La confianza se mide</b><span>Contando aciertos por grupos de confianza sabemos cuándo creerle.</span></div>
+    </div>
+    <div class="think"><b>Para pensar</b><p>Esta red aprendió con dígitos escritos en Turquía a fines de los años noventa. Si una cooperativa del altiplano la usara para leer sus planillas, ¿qué números le costarían más? ¿Cómo lo descubrirías antes de confiarle el trabajo?</p></div>
+    <dl class="gloss">
+      <div><dt>Inferencia</dt><dd>Usar una red ya entrenada para responder sobre datos nuevos, sin cambiar sus pesos.</dd></div>
+      <div><dt>Generalización</dt><dd>Capacidad de acertar con datos que la red nunca vio, si se parecen a los de su entrenamiento.</dd></div>
+      <div><dt>Fuera de distribución</dt><dd>Dato muy distinto a todo lo que la red vio al aprender.</dd></div>
+      <div><dt>Calibración</dt><dd>Qué tanto coincide la confianza de la red con su porcentaje real de aciertos.</dd></div>
+    </dl>
+  </section>
+</main>
+<div class="band foot-band"><div class="wrap">
+  <nav class="row" style="justify-content:space-between;gap:10px" aria-label="Otros laboratorios"><a class="btn" style="text-decoration:none;display:inline-flex;align-items:center" href="/redes-neuronales/c2/cuaderno/">← 11.6</a><a class="btn" style="text-decoration:none;display:inline-flex;align-items:center" href="/redes-neuronales/">Todos los laboratorios</a><a class="btn" style="text-decoration:none;display:inline-flex;align-items:center" href="/redes-neuronales/c2/cuaderno-digitos/">14.5 →</a></nav>
+  <footer><span>Ejemplo propio del equipo del libro <em>Redes Neuronales en Mortales</em>, Capítulo II, sección 14. Red entrenada con los dígitos de Alpaydin y Kaynak (1998).</span><span>Tu dibujo no sale de tu celular: la red funciona dentro de esta página y no guarda nada.</span></footer>
+</div></div>
+<script>/* Chispa: la neurona que guía los laboratorios */
+function chispaSVG(mood){
+  const m={happy:"M38 62 Q50 74 62 62",think:"M40 66 L60 64",wow:"M46 64 a4 5 0 1 0 8 0 a4 5 0 1 0 -8 0",sad:"M40 68 Q50 60 60 68"}[mood||"happy"];
+  return `<svg viewBox="0 0 100 100" class="chispa-svg" aria-hidden="true">
+  <g stroke="var(--lab)" stroke-width="5" stroke-linecap="round" fill="none">
+   <path d="M22 38 L8 26 M8 26 L4 14 M8 26 L-2 28"/><path d="M20 66 L6 78 M6 78 L-2 76 M6 78 L4 90"/>
+   <path d="M50 20 L50 6 M50 6 L42 0 M50 6 L58 0"/><path d="M80 58 L96 66 M96 66 L100 60"/></g>
+  <circle cx="50" cy="52" r="32" fill="var(--lab)"/>
+  <circle cx="50" cy="52" r="26" fill="var(--card)"/>
+  <circle cx="40" cy="48" r="5" fill="var(--ink)"/><circle cx="60" cy="48" r="5" fill="var(--ink)"/>
+  <circle cx="42" cy="46" r="1.6" fill="var(--card)"/><circle cx="62" cy="46" r="1.6" fill="var(--card)"/>
+  <path d="${m}" stroke="var(--ink)" stroke-width="3.5" fill="${mood==="wow"?"var(--ink)":"none"}" stroke-linecap="round"/>
+  <circle cx="32" cy="58" r="4" fill="var(--spark)" opacity=".55"/><circle cx="68" cy="58" r="4" fill="var(--spark)" opacity=".55"/>
+  <path d="M74 18 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="var(--spark)"/></svg>`;}
+document.querySelectorAll("[data-chispa]").forEach(el=>el.innerHTML=chispaSVG(el.dataset.chispa));
+
+/* Guía con misiones: cada misión tiene un texto, una pista, una condición y una explicación al lograrla */
+function Guide(root,{intro,missions,finale}){
+  let i=-1,solved=false;
+  root.classList.add("guide");
+  root.innerHTML=`<div class="av"></div><div class="bubble" aria-live="polite"><span class="who"></span><div class="msg"></div>
+    <div class="row" style="gap:8px"><button class="btn primary" data-next></button><button class="btn" data-hint>Dame una pista</button></div>
+    <p class="hint" hidden></p><div class="missions"></div></div>`;
+  const av=root.querySelector(".av"),who=root.querySelector(".who"),msg=root.querySelector(".msg"),nx=root.querySelector("[data-next]"),hb=root.querySelector("[data-hint]"),hint=root.querySelector(".hint"),ms=root.querySelector(".missions");
+  function face(m,anim){av.innerHTML=chispaSVG(m);if(anim){av.classList.remove("wob");void av.offsetWidth;av.classList.add("wob");}}
+  function chips(){ms.innerHTML=missions.map((_,k)=>`<span class="${k<i||(k===i&&solved)?"done":k===i?"now":""}">${k<i||(k===i&&solved)?"✓ ":""}Misión ${k+1}</span>`).join("");}
+  function show(){hint.hidden=true;
+    if(i<0){who.textContent="Chispa";msg.innerHTML=intro;nx.textContent="¡Empecemos!";nx.hidden=false;hb.hidden=true;face("happy");}
+    else if(i>=missions.length){who.textContent="Laboratorio completo";msg.innerHTML=finale;nx.hidden=true;hb.hidden=true;face("wow",true);}
+    else{const m=missions[i];who.textContent=`Misión ${i+1} de ${missions.length}`;msg.innerHTML=m.text;nx.hidden=true;hb.hidden=!m.hint;face("think");}
+    chips();}
+  nx.onclick=()=>{i++;solved=false;show();if(api.onMission)api.onMission(i);};
+  hb.onclick=()=>{hint.hidden=!hint.hidden;hint.innerHTML=missions[i].hint;};
+  const api={update(s){if(i<0||i>=missions.length||solved)return;const m=missions[i];
+      if(m.done(s)){solved=true;who.textContent=`¡Misión ${i+1} lograda!`;msg.innerHTML=(typeof m.ok==="function"?m.ok(s):m.ok);
+        nx.textContent=i===missions.length-1?"Terminar":"Siguiente misión";nx.hidden=false;hb.hidden=true;hint.hidden=true;face("happy",true);chips();}},
+    get index(){return i;},onMission:null,start(){i=0;solved=false;show();}};
+  show();return api;}
+
+/* Glosario: toca una palabra subrayada para ver su significado */
+(function(){let tip=null;
+  function close(){if(tip){tip.remove();tip=null;}}
+  document.addEventListener("click",e=>{const t=e.target.closest(".term");close();if(!t)return;
+    tip=document.createElement("div");tip.className="tip";tip.setAttribute("role","tooltip");tip.textContent=t.dataset.def;document.body.appendChild(tip);
+    const r=t.getBoundingClientRect(),w=tip.offsetWidth;let x=r.left+scrollX;x=Math.max(16,Math.min(x,innerWidth-w-16));
+    tip.style.left=x+"px";tip.style.top=(r.bottom+scrollY+6)+"px";});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});
+  addEventListener("resize",close);})();
+const tok=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function onTheme(fn){matchMedia("(prefers-color-scheme: dark)").addEventListener("change",fn);new MutationObserver(fn).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});}
+
+/* ====== Secciones 4 y 5: utilidades compartidas ====== */
+const $=id=>document.getElementById(id);
+/* Retroalimentación con la cara de Chispa */
+function say(el,mood,html,kind){el.className="fb "+(kind||"info");el.innerHTML=`<div class="face">${chispaSVG(mood)}</div><div>${html}</div>`;
+  const f=el.querySelector(".face");f.classList.remove("wob");void f.offsetWidth;f.classList.add(mood==="sad"?"wob":"pop");}
+/* Ayuda memoria flotante: copia el contenido de #memo en un diálogo */
+(function(){const src=document.getElementById("memo");if(!src||!window.HTMLDialogElement)return;
+  const d=document.createElement("dialog");d.className="memo-dlg";d.innerHTML=`<div class="memo">${src.innerHTML}<button class="btn close">Cerrar</button></div>`;
+  document.body.appendChild(d);d.querySelector(".close").onclick=()=>d.close();d.addEventListener("click",e=>{if(e.target===d)d.close();});
+  const b=document.createElement("button");b.className="btn fab";b.type="button";b.innerHTML="📌 Ayuda memoria";b.onclick=()=>d.showModal();document.body.appendChild(b);})();
+const fmt=(x,d=2)=>x.toLocaleString("es-BO",{minimumFractionDigits:d,maximumFractionDigits:d});
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+const M={"W1":[[-0.288,0.6052,-0.2678,0.387,0.3929,-0.3448,0.2719,-0.1276,-0.2561,-0.1604,0.3111,-0.1414,-0.3863,0.2496,-0.4208,0.6226,-0.1972,-0.6186,-0.4712,0.104,-0.365,0.3806,0.0251,-0.4003,0.0282,-0.2717,-0.0088,-0.1686,-0.3311,-0.0955,0.0553,-0.9798,0.2485,0.0314,0.2976,-0.035,-0.2755,-0.224,0.1692,-0.0807,-0.1133,0.1589,-0.4997,0.8293,-0.0178,0.058,0.1046,0.9553,-0.8513,-0.3415,-0.4198,0.1064,0.2667,-0.1964,-0.1649,0.1256,-0.0368,-0.0359,0.0794,-0.8401,0.0001,0.7544,0.1915,-0.5378],[-0.4236,0.3448,0.1141,0.3139,-0.2073,-0.4461,0.0942,-0.1563,0.2354,0.2074,0.3184,0.2849,-0.2965,0.1737,0.3081,-0.1272,0.1241,-0.3079,-0.5636,-0.4119,-0.1394,0.1351,0.0305,-0.3564,-0.2061,-0.0704,-0.1534,-0.0119,-0.0493,0.4015,0.089,-0.7857,0.1617,-0.0612,-0.0056,0.5613,-0.0803,-0.0678,0.0703,0.153,-0.3031,0.1339,-0.3483,1.1791,0.0488,0.1423,0.21,0.1838,-0.486,0.4963,0.0047,-0.0099,0.1682,0.5836,-0.0751,-0.0661,-0.1816,0.0463,-0.2461,-0.3665,-0.0087,0.9789,-0.0765,0.0934],[-0.3651,0.6299,0.147,0.2015,-0.7357,-0.7983,0.0181,-0.1122,0.4129,0.3286,0.3134,0.7763,-0.4173,0.0961,-0.1527,-0.4324,-0.1076,0.1916,-0.8342,-0.3219,-0.1478,-0.2499,0.0663,0.2491,-0.2731,-0.3336,-0.0555,-0.0857,0.0413,0.4448,0.1813,-0.4632,-0.3113,0.182,-0.0032,0.5126,0.4285,-0.2547,-0.1221,-0.1422,-0.2224,-0.0657,-0.1871,1.1707,-0.1156,0.1466,0.1367,0.3146,-0.0823,0.6901,-0.1814,-0.4168,-0.0247,0.1846,-0.0193,-0.2227,-0.2404,0.0467,-0.2731,0.298,-0.0135,1.2337,-0.1433,-0.3057],[-0.0445,0.7072,0.4653,0.5345,-0.6523,-0.0571,0.0979,0.3857,0.494,0.434,0.084,0.2878,-0.563,0.0973,-0.0834,0.2046,0.1917,0.7756,0.026,0.5368,0.1087,-0.1139,0.3012,0.1181,-0.2407,0.071,0.09,-0.5825,-0.059,0.1914,-0.1894,-0.7709,0.0927,0.3269,0.1204,0.2238,0.7652,0.613,-0.172,-0.1549,-0.307,0.0444,-0.0548,0.7165,-0.1945,-0.0041,-0.2395,-0.0474,-0.0098,0.9156,0.0248,-0.2105,-0.3731,0.3108,-0.0323,0.1083,-0.1146,0.0416,-0.0856,0.5567,-0.0197,0.9799,0.0074,-0.0151],[0.1111,-0.0157,-0.1014,0.5892,0.6137,0.0428,0.2913,0.5066,0.1623,0.2899,0.278,-0.2065,0.0787,0.1462,-0.0766,-0.1323,0.1222,0.2377,0.6617,1.0287,-0.0173,0.0311,0.1343,0.2137,0.5885,-0.0377,0.2337,-0.8413,0.2017,0.1609,0.3265,-0.4526,-0.0738,0.4392,-0.0192,-0.2562,0.642,0.091,0.3056,-0.0412,-0.187,0.1082,0.0976,0.3485,0.2775,0.4422,0.0286,-0.4457,-0.5247,0.186,0.0362,-0.6346,0.0289,0.0098,0.2379,0.5251,0.1097,-0.1635,0.121,-0.0038,-0.0222,0.805,-0.0565,0.6374],[0.3213,-0.2416,-0.0368,0.6635,-0.0119,-0.1051,0.0239,0.3399,-0.4395,0.0229,0.0126,-0.4836,0.0097,0.1184,0.0677,-1.6938,0.0368,0.3928,1.2055,0.0602,0.2258,0.2199,-0.2687,0.6037,0.2227,0.1245,0.6182,-0.3119,0.2138,0.1299,0.6214,-0.3953,-0.1608,0.0008,0.094,0.1617,0.711,-0.038,0.1432,0.6536,0.0139,0.2544,0.1532,0.3215,0.5966,-0.0682,0.4795,-0.3039,-0.4501,-0.5736,-0.1286,-0.3204,-0.0588,0.5699,0.3624,0.5053,0.2986,0.9178,0.2717,-0.6918,-0.0135,0.9342,0.1558,0.7947],[0.1632,-0.7757,-0.1094,0.1951,-0.8192,-0.2918,-0.1735,0.1327,-0.6764,0.4086,0.2091,0.321,-0.0256,0.2243,0.1889,-2.516,0.1676,0.2762,-0.0302,0.2495,-0.8172,0.0278,-0.4074,-0.1548,-0.0233,0.1158,0.5938,0.1002,0.5207,0.1545,0.5442,0.0675,-0.4069,0.2442,-0.3129,0.2552,0.8355,-0.4032,0.3879,0.2913,0.808,-0.4605,0.1069,-0.1681,0.1144,0.4191,0.3184,0.2865,-0.9434,0.4368,-0.1503,-0.1708,0.7796,0.2897,-0.0483,0.4333,0.4085,0.2121,-0.3191,-0.0697,-0.0094,0.7127,0.1823,0.7558],[0.0424,-0.4272,-0.3935,0.3533,-1.3324,0.2089,0.5954,0.1217,-0.1434,-0.1225,0.2986,0.0972,-0.2281,0.0963,-0.3919,-0.4405,0.3337,-0.0982,0.3366,-0.515,-0.4538,0.3119,0.29,-0.856,-0.0243,0.1878,0.3624,0.451,-0.1421,0.1869,0.1801,-0.0675,0.5125,0.2517,0.2709,0.2579,0.3686,-0.3244,0.0953,0.2725,0.1983,-0.1288,0.3971,0.3161,0.2199,-0.045,0.023,0.6821,-0.7291,-0.3299,-0.5808,0.5011,0.1319,0.3939,-0.5912,0.2432,0.3298,0.5874,0.4285,0.1249,-0.0007,0.2308,0.4847,0.1457],[-0.4014,0.4373,-0.0241,0.4593,0.4831,-0.7262,0.3599,-0.1533,-0.0198,0.0406,0.3886,-0.0684,0.6078,0.4149,-0.654,-0.1973,-0.0292,-1.2033,-0.0688,0.262,-0.1203,0.3754,-0.0521,-0.4328,0.2444,-0.4011,0.4779,0.0055,-0.3804,-0.567,0.3524,0.0667,0.1651,-0.2161,0.3868,-0.1283,-0.0666,-0.418,0.1635,0.212,-0.1486,0.317,-0.2735,0.2255,0.102,0.0618,0.0331,0.8767,-0.1606,-0.7327,-0.0832,-0.4655,0.635,0.17,-0.7075,-0.6876,-0.0525,-0.5825,-0.0584,-0.9897,-0.0023,0.7055,0.2718,0.352],[-0.3253,0.5467,0.0607,0.3845,0.1304,-0.8845,0.4371,-0.0724,0.1126,-0.0761,0.6193,-0.4052,0.3367,0.5628,-0.2451,0.1832,0.1597,-0.7413,-0.6288,-0.3517,-0.2951,-0.1964,0.0359,-0.4503,0.0268,-0.265,0.4372,-0.3314,-0.2375,0.0554,0.594,0.6377,-0.1311,0.2393,0.1563,0.5909,-0.0426,-0.4388,-0.0324,0.4294,-0.0998,0.3555,-0.1372,0.1487,0.4607,0.2569,0.5923,0.8402,0.3728,-0.7404,0.2704,-0.5133,0.6882,0.4589,-0.3438,-0.3438,-0.2401,0.143,0.1249,-0.6879,-0.0097,0.5665,0.3207,0.3429],[-0.1466,0.896,-0.3778,0.4425,-0.1401,-0.4354,0.3966,-0.08,-0.0991,-0.3996,0.4798,-0.3038,0.0049,0.1365,-0.1872,-0.1001,-0.0183,-0.0571,-0.3982,-0.756,-0.4046,0.0838,-0.0206,0.0881,-0.3427,-0.5407,0.5078,0.0728,0.0216,-0.0325,0.5595,0.7803,-0.1237,0.3897,0.4003,0.6855,0.2832,-0.8018,0.4012,0.2175,0.3474,0.2892,-0.3631,0.1005,0.2872,0.4478,0.7379,0.9562,0.5841,-0.2892,-0.6229,-0.2469,0.7282,0.4108,-0.329,-0.3383,-0.7033,0.6098,0.0797,-0.1638,-0.0156,0.2468,0.5331,-0.277],[-0.1591,-0.0011,0.0054,0.1508,0.0947,-0.1948,0.1847,0.0182,0.2135,0.0798,-0.4378,-0.4895,-0.2022,0.0041,-0.179,0.1157,-0.3257,0.7814,-0.3889,0.0541,-0.1471,-0.3361,0.3791,-0.6821,0.0228,0.0866,-0.0026,0.0865,0.2225,0.0167,0.4429,1.0875,-0.0924,0.4602,0.4457,-0.0979,0.3069,-0.3025,0.01,0.6787,0.1927,0.1646,0.3373,-0.0029,-0.3017,0.5702,0.0976,0.0089,0.6187,-0.0102,-0.3386,0.3459,0.3875,0.3506,-0.453,-0.1448,-0.4215,-0.2203,-0.3112,-0.4913,-0.0232,-0.2324,0.2622,-0.4564],[-0.4021,-0.0892,0.3167,0.1794,0.5548,-0.6372,0.3364,-0.1473,0.4627,0.2301,-0.383,-1.0847,0.2267,0.3279,-0.4156,0.9159,0.0013,-0.2627,0.4267,-0.06,0.0034,-0.428,0.2828,-0.2197,0.583,0.3494,0.0249,-0.1978,0.1136,-0.2997,0.2883,1.1548,-0.269,0.3583,0.0106,0.0707,-0.5732,0.255,-0.2198,0.9953,0.4136,0.0513,0.5223,0.4103,0.2069,0.1661,-0.0626,-0.4685,0.171,-0.9325,-0.2035,0.5375,0.3191,-0.516,-0.1775,-0.034,-0.1168,-0.3429,-0.3427,-1.0645,-0.0235,0.165,0.2783,0.8829],[-0.3794,0.1213,0.2079,-0.0228,-0.1898,-0.1605,0.5041,0.1822,-0.9009,-0.2601,-0.0885,-0.9178,0.7045,0.3008,-0.2117,-0.8847,0.2162,-0.2197,0.5509,-0.4239,0.0389,0.0179,-0.2946,0.7101,0.6328,0.3126,0.2163,-0.0528,-0.0973,-0.4716,0.1495,0.4691,-0.1726,0.7229,0.2723,0.2812,-1.0505,0.0212,-0.123,0.4785,0.2949,0.1018,0.3644,0.0269,0.3436,0.016,0.236,0.1265,0.2253,-0.9857,-0.212,0.3681,0.2434,-1.0299,0.0839,-0.0905,0.1102,0.4442,0.1954,-0.3843,-0.0178,-0.2336,0.5344,0.9574],[0.2202,0.1294,0.0232,-0.2924,-0.1156,0.222,0.1797,0.0914,-1.3059,-0.4023,-0.4585,-0.8669,0.3186,-0.1964,-0.1077,-2.62,0.0167,0.0524,0.3616,-0.3147,-0.5139,0.2881,-0.4042,-0.0509,0.0233,0.0447,0.3323,0.6887,-0.0474,-0.4728,0.324,0.4642,-0.5461,0.1916,-0.1676,-0.0321,-0.6543,-0.4707,0.2481,0.5644,0.7659,0.1736,0.4096,0.1529,0.2344,-0.0973,0.1439,0.228,-0.4177,-0.0993,-0.4536,0.4904,0.2693,-0.5444,-0.3814,0.1027,0.1175,-0.0668,-0.2739,-0.5091,-0.0102,-0.0421,0.1317,0.4769],[0.1362,-0.1483,-0.0149,0.7293,-0.1547,-0.355,0.1785,-0.1764,-1.0972,-0.3176,-0.6333,-0.3315,0.3646,-0.0332,-0.1959,-1.7816,0.4354,-0.2741,0.124,0.0744,-0.4466,0.1586,0.3238,-0.3737,-0.166,0.408,0.3241,0.4314,0.0673,0.1141,0.7586,0.4851,0.0014,0.014,0.0131,0.3009,-0.3675,-0.5397,-0.0278,0.2696,0.5097,0.2145,0.7468,0.1555,0.3478,-0.1957,0.1866,0.3668,-0.882,-0.2886,-0.0832,0.4654,0.4344,-0.0006,-0.0295,0.0097,0.6178,-0.07,-0.2718,-0.2584,-0.0051,0.2919,0.0646,0.2224],[-0.515,-0.3216,0.7211,0.3092,-0.2198,0.1149,0.0012,-0.2437,-0.3219,-0.1295,0.28,-0.1044,0.6319,0.6994,-0.1095,-0.0951,0.124,-1.6086,0.3305,1.0559,0.8071,1.0912,-0.1597,-0.0739,0.3052,0.3994,0.3556,0.3984,-0.7388,-0.4134,0.1302,0.2421,0.7575,-0.0744,0.5052,0.2212,0.428,0.2968,-0.491,0.2364,-0.5667,0.2951,0.1358,-1.4725,-0.0608,-0.6031,-0.3385,0.5663,0.3852,-0.2431,0.3415,-0.2911,-0.4339,0.4122,0.1894,-0.6859,-0.1035,-0.3025,0.4479,0.0412,-0.004,-0.9742,0.0305,0.4059],[-0.0893,0.4449,0.3366,0.6157,-0.4364,0.0334,0.2346,0.1729,-0.5181,-0.1257,0.8713,-0.3807,0.0136,0.3819,-0.2341,0.0628,0.1987,-1.0445,0.427,0.3484,0.7264,0.6096,-0.0218,0.0797,0.2264,-0.2113,-0.1959,0.3275,-0.5463,0.0513,0.3134,0.3815,0.4352,-0.2199,0.8419,0.3458,0.3325,0.184,-0.3813,0.4315,0.2231,0.2656,-0.2009,-1.13,0.257,-0.253,0.3929,0.5918,0.5587,-0.5056,0.2761,-0.2578,-0.3755,0.6215,0.3958,-0.3087,-0.3986,0.4692,0.3964,-0.2273,-0.0098,-0.9502,0.0257,0.2218],[0.5951,0.3735,-0.114,-0.0209,-0.2657,0.554,0.0781,0.3533,-0.5147,-0.5663,0.7484,0.2506,-0.7496,0.3509,0.431,0.0784,-0.1872,-0.225,-0.4644,0.1155,0.1176,0.3827,0.0381,0.3286,-0.0686,-0.1731,-0.8458,0.775,-0.0156,0.4338,-0.3908,0.1054,0.5971,0.0639,0.8016,0.4749,0.5426,0.2318,0.0307,0.0536,0.6379,-0.5173,-0.2925,-0.7463,-0.6402,-0.0554,0.001,0.9487,0.2623,0.4185,-0.0789,-0.3116,-0.6435,0.4796,0.4286,0.2294,-0.0787,1.0945,0.2615,-0.1078,-0.0161,-1.1597,-0.473,-0.595],[-0.1284,-0.0675,0.5287,-0.3348,-0.2318,0.1771,-0.2896,0.015,0.6225,-0.1931,-1.2347,0.1157,-0.9198,0.2163,0.2062,0.2376,-0.5473,1.514,-0.2716,-0.3609,0.6775,0.3565,0.1068,-0.662,-0.2445,0.533,-0.903,0.3856,0.0027,0.7955,-0.1655,-0.045,0.165,-0.2841,0.4182,0.6405,0.143,0.3259,-0.334,0.4908,-0.4916,-0.3601,0.6635,-0.7581,-0.3865,-0.0531,0.0889,-0.3554,-0.2959,0.6426,0.2134,-0.0123,-0.6434,0.413,0.1901,-0.1106,0.3781,-0.5025,-0.1899,0.1901,-0.0204,-1.085,-0.5808,-0.9045],[-0.2224,0.3271,0.4604,-0.2656,-0.065,-0.5026,-0.4151,-0.3015,1.0147,0.5479,-0.0448,-0.2846,-0.1229,0.6354,0.3128,0.6614,-0.2341,0.5281,0.38,-0.4998,0.3309,-0.4884,0.2914,0.4823,0.2298,0.2719,0.1692,-0.5273,0.0587,0.3003,-0.0951,-0.1287,0.0203,-0.3682,-0.1648,0.6016,-0.5989,0.0609,0.0589,0.2674,-0.3922,0.314,1.132,-0.3377,0.2534,-0.272,0.5018,-0.0862,0.3663,-0.6546,0.2711,-0.0147,-0.0231,-0.6073,0.0319,-0.4303,-0.1404,-0.6235,-0.4115,0.0895,-0.0219,-0.4173,-0.1141,0.3932],[-0.3579,0.7879,0.3026,-0.262,-0.4942,0.1419,0.1932,0.2466,-0.2196,0.0389,0.5904,-0.4148,-0.0548,0.4923,0.1574,-0.0051,0.2833,0.2286,0.3185,-0.3096,0.2411,0.0719,0.0713,0.6838,0.772,-0.1796,0.7097,-0.7892,-0.4663,-0.536,-0.6009,-0.1427,0.1345,0.2821,0.4708,0.4179,-1.2264,-0.1316,-0.133,0.5235,-0.3264,0.0831,0.056,0.2727,0.274,0.3818,0.2013,0.3842,0.461,-0.8884,0.1053,0.6346,-0.0231,-1.2984,0.2084,-0.4141,-0.6553,0.4137,0.4867,0.2427,-0.016,-0.2072,0.4934,0.8848],[-0.1362,0.5286,-0.0095,-0.6855,0.0968,0.3866,0.0858,0.47,-0.7471,0.0701,-0.2258,-0.2715,-0.0532,0.2912,-0.0698,-1.1606,-0.0037,-0.1435,0.2796,-0.021,-0.0447,0.1261,-0.2036,0.6809,0.6204,-0.6456,0.9438,-0.3376,-0.2456,-1.0568,-0.7888,0.1549,0.0791,0.1011,0.3517,0.3689,-1.6244,0.1913,0.2757,-0.1273,-0.573,0.2388,-0.49,0.0996,0.096,0.1391,0.2629,0.0911,0.0009,-0.3945,0.4197,-0.0491,-0.0615,-1.0111,0.153,-0.6866,-0.7535,-0.0329,0.2547,0.0528,-0.0101,-0.4374,0.273,0.5276],[-0.091,-0.1253,0.0426,-0.0387,0.581,0.0284,-0.036,0.2696,-0.9461,-0.1945,-0.0394,-0.4146,0.9631,0.0227,0.2449,-0.6094,0.247,-0.6535,0.2358,0.4558,0.066,-0.0756,0.2754,0.8837,0.4642,-0.3493,0.8663,-0.1456,-0.1967,-0.914,-0.0938,0.6019,0.1941,-0.1715,-0.1357,0.3689,-1.8836,-0.0561,0.0451,-0.2486,-0.6195,0.3198,-0.0654,0.099,-0.4492,0.0132,0.3568,-0.1042,-0.1837,-0.2218,0.7273,-0.1417,-0.0796,-1.2568,0.2924,-0.6914,-0.6905,-0.2408,0.4687,0.2936,-0.0053,0.4649,0.2286,0.3141],[-0.2633,-0.5716,0.334,-0.598,-0.5145,0.0912,-0.1317,-0.1707,-0.0273,0.3277,0.6971,-0.3283,-0.8665,0.5227,-0.0402,0.2649,0.241,-1.3504,0.2028,0.7988,0.2747,0.189,-0.1314,-0.0274,0.0433,0.283,-0.1007,0.8196,-0.1016,-0.4461,-0.4588,-0.1844,0.4636,0.2145,-0.0304,-0.9751,0.4086,0.8737,-0.0256,0.3004,-0.2054,-0.3714,0.1867,-0.9021,-0.3919,-0.1225,-1.1959,-0.0207,0.5748,0.3683,0.1062,0.2159,-0.3958,0.1488,0.0405,-0.1083,0.1304,0.0969,0.2186,0.307,-0.0044,-0.5905,0.4086,0.6943],[-0.3749,-0.3261,0.0896,-0.3059,-0.737,-0.0118,0.2098,0.1647,-0.1719,0.1627,0.9575,-0.1198,-0.532,-0.0613,0.0064,-0.163,0.0254,-2.0652,0.0505,0.3948,0.1069,0.0377,-0.3296,0.075,0.1177,-0.0474,-0.2159,0.5,0.0576,-0.0375,-0.053,-0.2748,-0.1536,0.3189,0.1533,-0.2537,0.1787,0.3186,0.1568,0.659,0.1515,-0.2897,0.0834,-0.556,0.2313,0.3591,-0.1249,0.1986,0.1351,0.3827,-0.2109,0.287,-0.0161,0.2393,0.2069,-0.0882,0.0789,0.4574,0.0788,-0.1461,-0.0116,-0.2537,0.3919,0.1818],[-0.0078,-0.1411,-0.444,-0.1745,-0.3043,0.2339,0.5643,0.2228,-0.4748,0.1039,0.9067,0.5995,-0.6035,0.2135,0.3132,-0.2718,0.2013,-1.2121,-0.7566,-0.0729,-0.5306,0.5181,-0.3551,-0.1766,0.3605,0.0431,-0.3577,0.5749,-0.2825,0.207,-0.1966,-0.681,0.0139,0.774,0.4681,0.2867,0.082,-0.1223,0.4574,0.2942,-0.3298,-0.2531,-0.1642,-0.2774,-0.4785,0.4555,0.0735,0.2465,-0.3937,0.7321,-0.6061,0.6611,0.2227,0.1398,-0.1807,-0.0502,0.2241,0.4242,0.4804,0.2578,-0.0169,-0.0171,0.7683,-0.4305],[0.3024,-0.2809,-0.3109,0.3171,-0.8667,0.7301,0.6555,0.2118,0.9227,-0.4194,-0.4671,0.5431,0.1935,-0.0475,-0.2282,-0.0957,-0.0139,0.4773,0.3827,-0.3907,0.4991,0.7171,-0.2802,-0.1246,-0.6031,0.4018,-0.0036,0.2513,-0.3908,0.1422,-0.1423,-1.2515,0.4757,0.1191,0.3379,0.6573,0.02,-0.361,-0.016,-0.6067,-1.1879,0.4173,0.0892,-0.3699,0.2589,-0.4076,0.7757,0.3598,-0.5771,0.6544,-0.1704,0.4626,0.2895,0.7675,-0.1291,-0.2738,0.3324,0.5788,0.5829,0.5209,-0.022,0.1427,0.4718,-0.4133],[0.5029,0.2395,-0.0689,-0.0486,-0.6712,0.5371,0.208,-0.1548,0.6641,0.3945,0.3323,0.6082,0.37,0.2654,-0.1069,-0.107,-0.6317,0.0316,0.3765,-0.2649,-0.2415,-0.1481,0.0403,-0.3204,-0.5164,0.2689,0.2905,0.6382,0.2035,0.8318,0.4533,-0.6686,0.3249,-0.3209,-0.2456,0.2932,0.1864,-0.2025,0.57,-0.7426,-0.1501,-0.0729,0.7099,-0.4092,0.7245,-0.1802,0.4386,0.5814,0.1836,0.1787,0.2391,0.1427,0.6665,0.5835,-0.7277,-0.0677,0.2051,-0.1267,-0.1758,0.5309,-0.0233,0.3294,0.3229,0.0264],[-0.2295,-0.0104,0.3255,-0.2794,-0.7094,0.3845,0.0724,0.3872,-0.3292,0.3694,0.6912,-0.1772,-0.726,0.0191,0.4982,0.174,-0.288,0.0505,0.7235,-0.2564,0.3011,-0.7246,0.2121,-0.4145,0.7274,-0.4076,0.3295,-0.098,0.2118,0.4537,-0.1644,-0.5017,0.7675,-0.1098,0.3745,0.1193,0.1163,0.0764,-0.3055,0.3742,-0.4765,0.2859,0.1672,0.739,0.4179,0.072,-0.169,0.0879,0.3711,-0.407,0.2241,0.4105,-0.3164,-0.3386,-0.0275,-0.7064,-0.3897,0.7117,-0.0221,-0.3725,-0.0162,0.2446,0.1517,0.5774],[0.3657,0.6953,-0.0026,-0.2523,0.0438,0.107,0.1634,0.1652,-0.2747,0.2258,0.5604,0.5685,-1.1981,-0.1831,0.6847,0.1482,0.1125,0.1412,-0.0703,0.6537,-0.2302,-0.3753,-0.1426,0.1088,0.6064,-0.8686,-0.1399,0.1953,0.1757,0.1165,-0.7106,-0.7969,0.2224,0.0536,0.0561,-0.8575,0.3436,0.3601,0.4081,0.2793,-0.903,-0.1424,-0.3395,0.4334,0.0264,0.5842,-0.5793,0.0171,0.0786,0.4522,0.1162,-0.2676,-0.5418,-0.522,0.3095,-0.8246,-0.6982,0.1551,0.1903,0.1407,-0.0098,0.1896,0.3489,0.4927],[0.4286,0.2665,-0.0485,-0.2308,0.3766,0.2582,0.2839,0.2708,-0.2932,-0.2108,0.3203,0.2788,-0.9162,-0.3189,0.2614,0.0518,-0.0333,0.1298,-0.6861,0.5567,-1.0617,0.1746,0.1427,0.6314,0.2721,-0.908,-0.1582,0.6417,-0.1529,-0.3777,-0.7114,-0.9776,-0.3773,0.0746,0.2877,-0.5251,0.2655,0.3987,0.5051,0.4847,-1.3471,-0.3856,-0.3824,0.2494,-0.9296,0.2463,-0.7604,-0.2903,0.8028,0.3867,-0.0549,-0.2995,-0.4655,-1.1328,0.4257,-0.8701,-1.005,0.4532,0.3386,0.5784,-0.0019,0.4091,0.3643,0.1239],[0.4946,-1.0706,-0.0825,-0.5498,0.3666,-0.5305,-0.1729,0.0776,-0.3225,0.4819,0.0803,-0.4092,-1.328,-0.2832,0.3568,-0.7138,0.0639,-0.0362,-0.198,0.5948,-0.6687,-0.4237,-0.0707,-0.0878,-0.103,-0.2971,-0.2635,0.1835,0.5195,-0.0779,-0.2614,-0.2394,-0.2142,0.2249,-0.5247,-0.9185,0.4838,0.1216,0.6692,0.5048,0.2842,-0.3285,-0.2157,0.4558,-0.4466,0.6498,-0.7176,-1.2974,-0.0837,0.3684,-0.1026,-0.5955,0.2996,-0.1919,0.2235,0.1516,0.5804,0.0612,-0.1405,0.1904,-0.002,0.6035,0.0857,-0.1746],[-0.005,-1.6749,0.1774,-0.4274,0.5952,-0.4408,-0.0502,0.2629,0.2889,0.2333,0.0182,-0.0918,-0.8099,0.0297,0.2695,0.2251,0.3815,-0.7651,0.0694,0.8794,-0.2274,-0.0926,-0.5877,0.1788,0.0241,-0.0729,-0.4117,0.1544,0.2607,-0.0409,-0.0831,-0.8519,-0.2224,0.2995,-0.4383,-0.6458,0.3609,0.0033,0.3821,0.1455,0.0195,-0.1108,-0.2264,-0.274,-0.2644,0.3576,-0.3206,-0.932,-0.4901,0.1707,-0.0649,0.0099,-0.0871,-0.2204,0.6951,0.2913,0.6153,0.089,0.0178,0.0318,-0.0121,0.1948,0.2976,-0.3531],[-0.0887,-1.2222,-0.1857,-0.4174,0.0657,0.2387,0.0531,0.2354,0.4114,0.2942,0.4509,0.7805,-0.4446,0.2547,-0.1562,-0.0873,0.3493,-1.2825,-0.4774,0.5638,-0.3546,0.1574,-0.6563,-0.3227,0.6489,0.0222,-0.3439,0.6536,0.4902,-0.137,-0.0798,-0.8981,-0.0978,0.5539,0.004,-0.0523,0.035,0.3303,0.4578,0.1954,-0.1012,-0.6876,-0.0969,-0.1622,-0.4718,0.191,-0.2982,-0.197,-0.2836,0.4799,-0.5733,0.4422,-0.1903,0.3997,0.2581,-0.0532,-0.0053,0.4413,-0.0684,-0.0244,-0.022,0.2773,0.1163,-0.1278],[0.6585,-0.485,-0.554,-0.1886,-0.7921,0.5442,0.3306,0.338,0.9762,-0.0442,0.3612,0.4249,0.5243,0.475,-0.6569,0.0158,0.0874,-1.0727,0.3567,-0.1302,0.1546,0.7393,-0.6183,0.0703,0.1081,-0.2904,0.4024,0.9772,-0.0303,-0.4389,-0.1994,0.2084,0.7776,-0.153,-0.1464,0.6038,-0.5645,0.0076,0.4452,-0.0446,-0.4269,0.4684,-0.084,0.2777,-0.1627,0.1214,0.3492,0.4833,-0.235,0.4325,-0.2851,0.2165,0.5259,0.5509,-0.0919,-0.4352,-0.652,0.2885,0.3718,-0.0887,-0.0242,0.2401,0.3814,0.2633],[0.6008,-0.5005,0.0479,-0.2598,-0.2171,0.3671,-0.0288,0.2062,0.2036,0.4902,0.3034,-0.1338,0.7857,0.7024,0.1866,0.4915,-0.8321,-0.6906,0.3609,-0.2094,-0.0464,0.2883,-0.0757,0.1013,0.1483,-0.1345,1.0226,0.6497,0.0207,-0.335,-0.0463,0.55,0.2884,-0.268,-0.4109,0.6003,-0.2964,0.0772,0.574,-0.5051,0.0801,0.4349,0.4072,-0.1587,0.7226,0.0172,0.1774,0.0725,-0.2987,0.3949,0.3681,-0.708,0.1591,0.1565,-0.453,0.2694,-0.0758,-0.2226,0.1207,0.8036,-0.0177,-0.0134,0.2404,0.3012],[0.2598,-1.2197,0.0005,-0.3758,0.1,0.5212,0.2251,0.0115,-0.7837,0.2407,0.1246,-0.6945,-0.215,0.4775,0.5489,0.2527,-1.1632,-0.1548,0.096,0.4001,0.0445,-0.2469,-0.1763,-0.8727,0.6096,0.436,0.1602,0.4907,0.0026,0.1732,-0.2554,-0.0069,0.2934,0.2791,-0.1157,-0.3292,0.6801,0.3234,0.4059,0.4935,-0.027,-0.2931,0.579,0.1002,0.9549,0.2093,-0.4244,-0.7801,0.2319,-0.1774,0.2307,0.3508,-0.3411,-0.7423,-0.2745,0.0265,0.4262,0.399,-0.1072,0.0012,-0.0129,-0.256,0.3315,0.2676],[0.0069,-0.4665,-0.0632,-0.0702,0.7947,0.8018,-0.0937,0.2062,-1.1043,0.0688,0.4052,0.3189,-0.6737,-0.0967,0.3967,0.2161,-0.5095,0.0844,-0.889,0.8789,-0.7007,-0.6384,-0.5908,-0.9865,0.5877,-0.1951,0.0375,0.6654,0.4315,0.3631,-0.2208,-0.3644,-0.7659,0.5058,-0.3097,-0.8938,1.3254,0.3734,0.9629,0.7531,0.1188,-0.7152,0.3086,-0.3282,0.4783,0.5635,-0.8066,-0.6547,0.0451,0.5057,-0.2172,0.2032,-0.0505,-0.5991,-0.5924,-0.4094,0.5886,0.0672,-0.5758,-0.2675,-0.0079,0.372,0.2387,-0.0342],[0.1715,0.0988,-0.7495,0.1165,0.7854,0.0828,0.9129,0.2933,-0.5001,-0.3482,-0.1824,0.0952,-0.0542,-0.8988,-0.2378,-0.2355,0.2172,-0.2169,-1.3664,0.1385,-1.4006,-0.3035,-0.2499,-0.7532,-0.3919,-0.8857,0.0591,0.189,0.4569,0.1118,-0.0214,-0.6256,-1.3596,0.795,-0.1167,-1.1866,0.9954,-0.2642,1.3605,0.5069,0.3898,-0.5577,-0.4577,0.0868,-0.0452,1.0135,-0.5806,-0.6922,0.2248,0.1025,-0.9147,0.061,0.5192,-1.0099,-0.6725,-0.3313,0.1728,-0.3445,-0.1539,-0.3519,-0.0003,1.1429,0.8955,0.01],[0.0791,-0.257,0.1406,-0.1054,1.4624,-0.5276,-0.5239,-0.3494,-0.4564,0.9359,-0.5441,-0.0467,-0.9766,-0.0719,0.6432,-0.4835,-0.3152,1.0084,-0.4014,0.7594,-1.2917,0.5241,0.0672,0.5743,0.3994,-0.3481,-0.1889,-0.4606,-0.2986,-0.1208,0.1503,-0.4051,-0.5731,-0.3944,0.2967,-0.19,0.2963,-0.417,0.5058,0.1206,-0.1953,-0.0269,-0.8196,0.4975,-0.2514,0.3107,0.0259,-1.6934,-0.2021,-0.1734,0.3254,-1.2159,0.4824,-0.3253,0.351,0.1451,-0.1958,-0.4482,-0.361,0.3548,-0.0001,0.6749,-0.3767,-0.064],[0.3195,-0.1091,0.0555,0.0536,1.3698,-0.2247,0.0322,0.2664,0.2628,0.2597,-0.4325,0.377,0.3362,-0.2159,-0.2343,0.3203,-0.0586,1.114,0.0745,0.3098,-0.3144,0.1885,-0.8056,0.5789,0.3622,-0.6076,-0.6948,-0.7095,-0.0972,-0.0828,-0.2109,-0.7076,0.2398,0.2779,0.2329,-0.5204,0.4785,-0.0209,0.2599,0.0242,0.299,0.1844,-0.6998,0.3568,-0.0265,0.415,-0.1548,-1.4295,-0.1636,-0.3402,-0.1331,-1.1083,-0.2261,-0.2038,1.1364,0.2921,0.3252,0.5273,0.2467,0.3907,-0.0099,0.2448,-0.2847,-0.1948],[0.5439,-0.4076,-0.1452,-0.0828,0.7431,0.2631,-0.0582,0.6843,0.6131,0.265,-0.3222,1.3588,0.4965,0.1042,-0.9662,0.1525,0.2883,0.2485,0.0382,0.4437,0.3207,-0.3144,-0.8949,0.1017,0.4482,-0.1627,-0.8323,-0.5293,0.4167,-0.5381,-0.0847,0.2574,0.1047,0.5204,0.2972,-0.5124,0.1363,0.2699,0.0472,0.211,0.3729,0.1654,-0.3666,0.1664,-1.0319,0.3299,-0.475,-1.0063,-1.0991,-0.0079,-0.5139,-0.353,-0.4542,0.594,0.8496,0.2267,0.3728,0.6875,0.5347,0.0674,-0.0191,-0.4008,-0.3826,-0.4499],[0.743,-0.4405,-0.0716,-0.0262,0.1316,-0.1314,-0.6959,0.3845,0.2692,1.0237,0.1896,0.8657,0.3601,0.4729,0.3575,-0.1456,0.5102,-0.9164,0.0056,0.3516,0.473,0.5875,-0.294,0.2161,0.2586,-0.4287,-0.286,-0.1057,0.5287,-0.6608,-0.3073,0.7402,0.4844,-0.1898,-0.2101,-0.4222,-0.7505,0.2948,0.2214,0.2779,0.2033,-0.1916,-0.0974,0.2969,-1.6026,0.2176,-0.2437,-0.642,-1.8991,0.7366,0.5389,-0.9119,0.2005,0.7447,-0.291,-0.021,-0.0834,-0.9802,-0.1506,0.2759,-0.0201,-0.2847,-0.7561,0.0505],[0.0851,-0.4129,-0.0544,-0.4419,0.6917,0.1917,-0.3317,-0.1146,-0.5631,0.5317,0.3595,-0.2466,-0.0923,0.0491,0.8527,-0.1994,0.6246,-0.1456,-0.2744,0.3888,0.2078,0.7075,0.5281,-0.2361,0.2044,0.4581,0.2073,-0.2888,0.0753,0.1119,-0.4538,0.3216,-0.1711,-0.1171,0.2349,0.1551,-0.5503,0.1772,0.2133,-0.6532,-0.0603,0.1257,0.4172,-0.3144,0.0651,0.3058,0.1099,-0.8059,-1.0932,0.5152,0.8822,-0.3463,-0.0673,-0.4819,-0.6532,0.7483,0.0903,-0.6298,0.3206,1.0705,-0.0175,-0.0675,-0.0671,0.4433],[0.2046,-0.4912,-0.0221,-0.1486,0.9729,0.3265,0.1393,0.387,-0.3092,-0.6817,-0.3671,-0.3721,0.3705,-0.2569,-0.0291,0.3852,-1.0208,-0.1404,-0.6272,0.1502,0.3411,-0.1612,-0.1593,-0.5974,-0.1897,0.2277,0.4837,-0.5859,0.1561,0.1438,0.0668,-0.0637,-0.1908,0.5032,-0.0826,-0.5768,0.3704,0.3053,0.3703,-0.2156,0.3527,0.2173,0.0357,0.0553,1.0124,0.4969,-0.0543,-0.7661,-0.0721,-0.1856,0.2114,0.4254,0.0498,-0.7472,-1.1168,0.4349,0.7,-0.302,0.374,0.3582,-0.0113,-0.1767,0.0464,-0.1677],[0.1317,0.0929,-0.1377,0.1867,0.9984,0.8658,-0.3388,0.133,-0.1495,-0.2532,-0.0954,0.396,0.2923,-0.1931,0.0098,0.6121,-1.7422,-0.2546,-0.8699,0.1826,0.3522,-0.7257,-0.2578,-0.2597,-0.0967,-0.5262,0.0959,-0.2254,0.6034,0.1662,0.0382,0.1966,-0.1298,-0.2797,-0.186,-0.1655,0.38,0.1969,0.0879,-0.1403,0.3522,0.0122,-0.237,0.0584,0.4491,0.1181,0.2391,-0.1688,0.0635,-0.1798,0.4007,0.5007,-0.1432,0.0088,-1.8014,-0.3474,0.7303,-0.5684,-0.4257,0.1426,-0.0088,-0.1172,-0.2803,-0.2283],[0.6399,0.2473,-0.0571,-0.006,0.4376,0.4212,-0.2646,0.6423,0.4215,-0.2398,-0.3806,-0.0092,0.4319,-0.0164,0.2112,0.3155,-0.2207,-0.9381,-0.3041,-0.2695,0.6519,-0.36,0.4372,-0.1858,-0.2365,-0.8572,0.2737,-0.9359,0.5817,-0.4929,-0.1616,0.5607,-0.004,-0.1273,-0.1883,0.0439,0.0813,0.1886,-0.269,-0.5005,0.6777,0.2014,-0.5318,0.1757,-0.0965,0.1298,0.101,0.0009,-0.1767,-0.6156,0.4264,-0.0972,0.1146,-0.5478,-1.8116,-0.0888,-0.0117,-0.4647,0.2602,-0.1246,-0.0002,0.1108,-0.3855,-0.3779],[-0.5497,0.6913,0.3076,0.1283,0.5481,-0.4536,-0.1845,-0.6276,0.1355,1.2039,-0.2274,0.321,-0.4074,-0.2058,0.9039,0.1347,0.0087,0.5437,0.181,0.235,-1.3866,0.8624,0.3596,0.1934,-0.1515,0.1318,0.1073,-0.0454,-0.4914,-0.3913,0.392,-0.1186,-0.6896,-0.5015,-0.0487,0.0695,-0.6829,0.0039,0.3213,-0.1194,-0.3242,0.1194,-0.0577,0.0115,-0.0156,-0.2463,0.2083,-0.4058,0.2229,0.3479,0.6589,-0.1823,0.4334,-0.0929,0.1789,0.4266,-0.6459,-0.5621,-0.5103,0.5526,0.0001,0.2424,-0.1112,0.3301],[-0.5363,0.8869,0.3997,0.1588,0.242,-0.0889,0.3769,0.0739,0.5711,0.014,-0.12,0.4852,0.2657,-0.6405,-0.657,0.3862,-0.0491,1.1533,0.178,-0.621,-0.8117,0.2206,-0.2821,-0.037,-0.4779,0.4014,-0.2344,-0.5189,-0.0711,-0.329,0.5188,-0.5139,-0.2424,0.5338,-0.0154,-0.0716,-0.0502,-0.0907,0.1259,-0.4545,-0.466,0.2583,0.0123,-0.0184,0.1611,-0.0164,0.0262,-0.2876,1.0387,0.0083,-0.0449,0.1301,-0.0219,-0.1395,0.4891,0.2115,0.1928,0.2345,-0.1613,0.5671,-0.0079,0.9376,0.5466,0.3],[-0.3336,0.7041,0.0422,0.0127,0.3301,0.116,0.328,0.4974,0.6046,-0.3228,-0.5157,1.1031,0.038,-0.6156,-0.8853,0.4889,-0.0407,0.8126,-0.1471,-0.4868,0.1529,-0.6286,-0.6574,-0.119,-0.2253,0.3602,-0.2803,-0.1805,0.2341,-0.3938,0.2034,-0.2697,-0.0471,0.4879,0.0578,-0.3535,0.3084,0.2569,-0.1123,0.0251,-0.2724,0.3451,-0.1448,0.2471,0.0624,0.3403,-0.0495,-0.3544,0.459,-0.0184,-0.6033,0.4237,-0.1001,0.7248,0.7292,0.3858,0.1356,0.3768,0.4205,0.207,-0.0175,0.1905,0.048,-0.5458],[0.2035,0.6767,0.3208,0.5131,0.4171,-0.3501,-0.346,0.0062,-0.0104,0.3829,-0.4804,0.581,0.1445,-1.2605,0.277,0.4637,0.2345,0.4096,0.471,0.5263,0.5684,-0.3651,-0.0256,0.5991,-0.3814,0.1929,-0.4028,-0.3603,0.5453,-0.0123,0.2302,0.2549,-0.1622,0.2775,-0.1253,-0.8451,-0.0466,0.2954,-0.0294,0.0333,0.4447,0.1128,-0.0325,0.3301,-0.7841,0.0593,-0.6152,0.092,0.2357,0.549,0.0236,-0.4232,-0.2691,0.5535,0.6087,0.5577,-0.0423,-0.6131,-0.4411,-0.35,-0.017,0.2011,-0.6448,-0.2036],[-0.2021,-0.2113,0.5362,0.6222,0.6881,-0.2847,-0.0692,-0.1982,-0.1953,-0.2248,-0.7319,-0.3555,0.0952,-1.1308,0.8841,0.0019,1.064,1.0509,0.1892,0.3724,0.6585,0.0118,0.569,0.4064,-0.6124,0.5416,-0.1992,-0.4071,0.0165,0.2461,0.392,0.2859,-0.2887,-0.1614,0.0974,-0.2097,0.0344,0.3825,-0.4761,-0.9214,0.4885,0.219,-0.3241,-0.2236,-0.1227,-0.3451,-0.3565,-0.1605,0.4175,0.4566,0.839,-0.1916,-0.1947,0.291,0.5492,0.5013,0.1103,-0.0957,-0.0717,0.0667,-0.0178,0.0443,-0.5798,-0.3528],[-0.2807,-0.1188,0.5068,0.807,0.7676,0.0912,-0.0745,0.212,0.4182,-1.323,-0.5712,-0.5685,0.4416,-0.83,0.1735,0.1087,-0.5246,0.2149,0.5129,-0.0343,0.8227,-0.0553,0.2541,0.4521,-0.8633,0.141,0.0862,-0.8788,0.0475,0.3503,0.3727,0.2808,-0.0253,-0.1196,0.0113,0.0756,0.059,0.4545,-0.5356,-0.7735,0.0515,0.4972,-0.436,-0.0031,0.5815,-0.5211,0.122,0.171,0.3354,-0.3485,0.3026,0.023,-0.5051,0.2355,0.0393,0.3417,0.3135,-0.3596,-0.1302,0.1195,-0.0101,-0.0963,-0.1691,-0.3759],[-0.4564,-0.1255,0.5341,0.7407,0.2484,0.5654,-0.2708,0.139,0.5971,-0.807,-0.5261,-0.0018,0.4903,-0.5241,-0.0884,0.7141,-2.0415,-0.029,0.197,-0.138,0.8897,0.1922,0.1794,0.4748,-0.7019,0.2056,0.292,-0.5307,-0.061,0.3917,0.3185,0.1976,0.3354,-0.1863,0.0225,0.3789,0.3275,0.4828,-0.5512,-0.7385,0.1018,0.734,-0.5745,-0.4282,0.5181,-0.5974,0.2001,0.22,0.1416,-0.3218,0.2985,0.1953,-0.4341,0.2513,-0.5436,0.0176,0.3649,-0.5848,-0.119,0.1414,-0.006,-0.6553,-0.015,-0.241],[-0.1744,0.0022,0.2682,0.3571,-0.0229,0.3874,-0.2062,0.3176,0.7931,-0.616,-0.7436,-0.318,0.5908,-0.1689,0.276,0.767,-0.4291,-0.0976,0.5015,-0.1858,0.8481,-0.2233,0.9087,0.5946,-0.65,-0.4366,0.5297,-0.7087,-0.0706,0.0001,-0.0829,0.5829,0.3316,-0.5042,-0.1192,0.2638,0.1363,0.3977,-0.6149,-1.0915,0.3472,0.4408,0.025,0.0524,0.0889,-0.381,0.3063,0.394,0.3275,-0.445,0.5092,0.0221,-0.3343,-0.7187,-0.2184,0.1414,-0.2216,-0.5099,-0.1097,0.2514,-0.0001,-0.6049,-0.1937,-0.5717],[-0.0422,0.2725,-0.3313,0.1344,-0.2563,-0.0981,0.0353,-0.0619,0.407,-0.1776,-0.1385,0.1967,-0.3115,-0.4499,0.2153,-0.0515,0.2047,0.2154,-0.0626,0.1501,-0.4741,0.5071,0.2903,-0.0807,-0.8522,-0.1401,-0.0186,-0.0495,-0.0553,-0.0654,0.2411,0.1984,0.0476,-0.0762,0.0254,-0.2508,-0.0243,-0.2435,0.4564,-0.5833,0.1679,0.1774,-0.1926,-0.1093,-0.2709,0.1426,0.0779,0.238,0.0668,-0.178,0.0837,-0.05,0.4537,0.2669,0.1647,-0.075,-0.029,0.1028,-0.0308,0.1969,-0.0,0.0717,-0.1755,-0.7552],[-0.0357,0.2416,-0.0456,0.3406,-0.0939,-0.0952,0.0611,-0.2762,0.7342,-0.0411,-0.2062,0.5174,-0.3337,-0.8555,-0.2627,-0.4878,0.1805,0.1648,-0.0603,-0.249,-0.9683,0.5213,0.2935,-0.1861,-0.4325,0.2947,-0.337,0.0284,-0.053,-0.0513,0.5565,-0.0945,-0.2865,0.1858,0.2045,-0.4133,-0.078,-0.2931,0.1639,-0.1222,0.135,-0.1249,-0.0779,-0.0106,-1.0468,0.2327,-0.2451,0.7234,0.6835,0.0859,0.2113,0.2412,0.1288,0.3537,0.4503,0.1091,-0.0048,0.3802,-0.0202,0.43,-0.0008,0.1987,-0.229,-0.2073],[-0.1314,0.1072,0.1008,0.1787,0.0429,-0.2854,0.3604,-0.0396,0.6616,-0.0391,-0.0333,0.7911,-0.0383,-0.1433,-0.1486,0.2226,0.5096,-0.2238,0.1239,-0.4742,-0.8339,0.1468,-0.1858,-0.0982,0.073,0.1221,-0.063,0.2604,0.0996,0.2742,0.5245,0.0894,-0.2605,0.239,0.0466,-0.0419,-0.162,-0.0336,0.2275,0.2048,-0.0199,0.1253,0.2429,-0.4376,-0.5409,0.0826,-0.1029,0.7854,0.5299,0.1132,-0.1401,0.5818,0.3277,0.0133,0.4186,0.168,0.5111,0.5797,-0.0835,0.5611,-0.0068,-0.3481,0.1328,0.138],[0.0656,0.1613,-0.0732,0.1109,0.0266,-0.1181,0.5303,0.2208,0.0474,0.0144,0.1351,0.4927,0.277,0.1796,0.2629,0.2346,0.6645,-0.5575,0.5744,-0.9116,-0.3124,-0.0056,0.1488,0.2686,0.3649,0.1476,0.5888,-0.0185,0.177,-0.0863,0.1993,0.3703,0.0088,0.1225,0.2778,0.331,-0.5856,-0.1455,0.3359,0.5999,0.4632,0.3457,-0.3028,-0.0948,-0.2559,0.3349,0.2573,0.5704,0.4827,0.0148,-0.0299,0.2861,0.3147,0.0946,0.7768,0.2897,0.0655,0.1826,0.1781,0.0729,-0.0079,-0.3047,0.4053,0.0852],[0.0732,-0.7181,-0.0579,0.081,0.2428,0.4356,0.3631,0.1274,-0.6719,0.3026,-0.0538,0.6258,0.3923,-0.0548,0.288,-0.3512,0.2969,0.3677,0.1664,-0.3721,-0.2738,0.2421,-0.0093,0.2457,0.2017,0.0035,-0.1959,0.127,0.0127,0.0788,0.3705,0.5181,-0.3049,0.4981,0.4506,0.005,-0.5742,-0.3046,0.1061,0.4369,0.604,0.1331,-0.304,0.2659,-0.0081,0.3938,0.0955,0.3484,0.0441,0.0439,0.3156,-0.0771,0.4324,0.074,1.1885,0.3243,0.3828,-0.093,0.2004,0.1273,-0.0117,-0.7433,-0.1921,0.1164],[-0.1554,-0.4917,0.0324,0.5035,-0.0556,0.5334,0.1137,0.0277,-0.5428,-0.1789,-0.3361,-0.0487,-0.0665,-0.4909,0.4285,-0.2028,-0.7243,0.2182,0.4178,-0.0883,-0.0447,0.3695,-0.1249,0.3903,0.4096,0.48,-0.2358,-0.0527,0.1387,0.3268,0.655,0.1253,0.0077,0.3055,0.4063,-0.0808,-0.3572,0.0511,-0.1256,-0.3498,0.2383,0.147,-0.461,0.3546,0.4651,-0.0217,-0.1049,0.4104,-0.2282,-0.1354,0.209,-0.2976,-0.1506,-0.1892,0.9063,0.523,0.7962,-0.2908,-0.3277,0.3104,-0.0084,-0.833,-0.6879,-0.2049],[-0.0457,-0.3115,0.4886,0.9217,-0.3669,0.6516,-0.2989,-0.0811,-0.3003,-0.2175,-0.2003,-0.1047,0.1122,-0.4366,0.2231,0.0054,-2.1807,0.2783,0.9342,-0.0687,0.4308,0.4868,0.3385,0.8803,-0.0966,0.3738,-0.3083,0.3762,-0.095,0.4993,0.4261,0.0392,0.0469,0.0164,0.181,0.0108,0.3474,0.3372,-0.5439,-0.5538,0.0227,0.2038,-0.3578,-0.1444,0.2324,-0.4275,-0.2941,0.6828,0.3078,-0.1488,0.3067,-0.2854,-0.4934,-0.4134,0.9743,0.2502,0.3262,-0.5977,-0.1862,0.0385,-0.0027,-0.4874,-0.294,0.0573],[0.0938,0.1351,0.5999,0.2643,-0.1933,0.2404,-0.6196,-0.0174,0.199,0.0468,-0.3212,-0.1546,0.2868,-0.6499,0.6329,-0.0902,-0.4161,0.3878,0.6812,0.2694,0.6365,-0.2114,0.6146,0.4508,-0.3655,-0.2085,-0.6163,0.3552,0.2777,0.426,-0.0972,0.361,0.1761,-0.1742,0.1061,0.1127,0.3783,0.4112,-0.6513,-0.5078,0.167,-0.0502,-0.0903,0.0398,-0.4449,-0.3196,-0.2645,0.2635,0.527,0.3481,0.2033,0.0869,-0.3726,0.0652,1.1804,-0.1114,0.0651,-0.0654,-0.4107,-0.1183,0.0,0.1301,-0.4125,-0.2918]],"b1":[0.0336,0.4015,-0.3931,0.5528,0.1145,-0.4056,0.5134,0.1307,-0.4993,-0.6966,0.0573,-0.3713,0.556,-0.2587,-0.5141,-0.1766,0.3308,0.1137,-0.4008,0.0965,-0.4929,-0.3439,0.1591,0.0485,-0.5429,-0.4545,-0.1333,0.2019,0.166,-0.1738,0.5734,0.1479,-0.3106,0.7665,0.4003,-0.5177,0.2819,-0.7127,0.4624,-0.7815,0.375,0.2221,-0.616,0.4174,-0.0928,0.6572,-0.0276,0.7319,0.6099,-0.6204,-0.3109,0.2286,0.8123,-0.4641,-0.1109,-0.5145,-0.179,-0.1316,0.2314,-0.8009,0.0002,0.5533,0.3158,0.1685],"W2":[[-0.7728,-0.2737,0.376,-1.4792,0.1488,0.4036,0.3161,0.2509,0.1657,0.2425],[0.0905,-1.7587,1.0672,-0.2445,1.2513,0.8601,-0.6021,-0.2444,-2.1592,1.3473],[0.62,0.7182,0.1518,0.099,0.0902,-0.4732,-0.0629,-0.813,-0.3461,-0.1461],[0.1682,-0.1837,0.4625,0.3092,-1.4018,0.2292,-0.0283,-1.0285,0.1325,0.4264],[0.3868,-1.8698,0.8447,0.2858,2.401,-0.3949,-1.1418,0.4254,-2.1524,0.081],[-0.3705,-0.2475,-1.2504,-1.0513,0.1745,0.1065,0.7113,-1.4444,0.6985,0.915],[0.3485,-0.9266,-0.9346,0.5918,-0.6813,0.3576,-0.2933,0.0674,0.3719,0.5725],[0.2182,-0.4581,-0.2392,-0.4741,-0.1474,-0.1961,0.4594,-0.0218,0.494,-0.1695],[-0.6382,0.7598,0.8581,-0.1951,-0.5773,-2.7788,-0.0877,1.2955,0.1063,-0.5437],[0.1836,1.323,0.1993,1.0963,1.113,0.4562,-2.3622,0.3223,-1.2542,-1.435],[0.175,-1.2384,-1.8234,-2.5193,1.0092,0.5582,0.1468,0.3832,0.1541,0.354],[-0.7872,1.4306,0.379,-1.2087,0.6983,-0.1889,0.3972,0.3537,0.0507,-3.388],[-1.1213,-0.6122,0.542,1.0138,0.0263,0.2641,1.4139,-0.3998,0.72,-3.2071],[-0.1916,0.6561,-0.8799,-0.6413,1.4221,-1.1202,-1.8184,0.201,-0.2111,0.093],[-0.3871,0.7979,1.0271,-1.7499,1.2606,0.0791,-0.2941,0.2293,-0.6446,-0.6651],[0.8286,-0.4423,0.8839,0.9412,-0.0062,-3.4505,0.3418,0.5416,-0.0614,1.2223],[-1.2161,-0.7123,-2.2961,1.8978,-1.1196,0.5947,0.2126,-2.1056,1.4699,0.1859],[-1.8294,-1.6442,-0.8264,-1.0875,0.8477,1.7961,-2.6946,-2.8791,1.0029,1.6984],[-1.1628,1.0662,0.7088,0.0588,-2.1368,-1.2987,1.004,-0.6538,-0.0995,0.0879],[0.5887,-1.2539,0.6065,-0.4587,1.3864,0.4117,0.6141,-1.0202,-0.0557,-1.041],[0.6107,0.955,0.613,-0.9758,-0.8506,-1.4045,0.5586,-1.5755,0.6565,-0.2866],[-1.4179,0.3739,-1.1267,0.9442,0.2306,0.3748,-0.5149,-1.7077,0.2691,0.6666],[-0.0123,1.3032,1.1494,-1.4059,-0.3043,-0.4256,-0.2537,-0.7825,-1.3471,0.5315],[-0.2191,-0.1542,1.1938,0.5665,0.4404,-3.0402,0.4429,-0.4755,-0.0245,-0.1818],[0.5469,1.252,0.3475,-0.9488,0.215,-1.3085,-1.9903,0.4828,-0.9646,0.1499],[0.5994,0.7651,-0.9813,0.3879,0.1492,0.5178,0.1824,-1.7242,-0.4113,-0.1439],[-2.223,0.326,0.0404,0.5733,0.2266,-1.7447,-0.5179,0.816,0.3772,-0.1804],[-1.8206,-0.6904,0.472,-0.8193,0.5948,0.7979,-0.0066,-0.1391,-1.7786,1.3872],[0.0338,-0.3876,0.1717,-0.6346,-0.1573,0.1302,0.656,0.2212,-0.2825,-0.9037],[-0.7813,0.5947,-0.453,0.0065,-0.767,1.0289,0.073,-1.1371,-0.9854,-0.319],[-0.0956,-0.165,0.1539,0.5826,-1.3695,0.5293,-0.2874,-0.5381,-0.0435,-0.2517],[-0.1463,-0.1269,0.8626,0.354,-3.2195,1.0017,0.525,1.1981,-0.0014,-2.1496],[-0.2904,0.1361,0.21,-1.0403,0.0626,-0.8258,0.2097,-0.2898,0.4338,0.8247],[0.7788,-0.8874,-0.6844,0.1474,-0.3191,0.2371,0.0706,-0.1139,-0.0044,-0.3513],[0.7599,-0.1823,-0.2689,-0.2826,-0.0556,0.2514,-0.7642,-0.5038,0.4883,0.5272],[-1.8579,0.5909,-0.6353,-0.1673,0.7421,-0.3086,-2.2603,-0.0428,0.2548,0.4021],[-0.2763,0.1696,-0.8942,1.5631,-1.3212,1.0174,0.9613,-1.6795,-1.0347,-1.5391],[0.1473,0.3018,-0.2319,-0.7999,0.519,-0.7453,0.7872,-0.5857,-0.36,0.2038],[-0.9593,-1.0386,-0.3551,0.1286,0.4563,0.5027,0.0008,0.485,0.1781,-0.3221],[0.8076,1.8812,-0.2856,-2.2907,0.1133,0.2557,-1.1594,0.4481,-0.9054,0.012],[0.5059,-1.3004,0.5658,0.0011,-0.0846,0.375,0.5661,1.2005,-0.5386,-2.0236],[-0.3106,0.0201,0.545,0.4786,-1.2281,-0.5686,-0.2853,-0.3683,0.5941,-0.0082],[-0.1482,0.9692,-1.6362,-0.5033,0.3159,1.2672,0.7104,0.4632,-0.741,-0.0806],[0.4275,-1.1773,1.5491,0.408,-1.978,-0.0059,-1.5523,0.8261,-0.4187,0.8558],[-2.9758,0.9538,-1.2993,0.9303,-0.2398,-0.0978,-1.5124,-0.24,0.2137,0.1298],[0.6712,-1.0802,-0.335,-0.1792,0.2376,0.3349,-0.2292,0.5847,0.1482,-0.522],[-2.1217,0.2348,-0.1798,0.2855,0.1808,-0.0035,-1.6783,0.1421,0.5913,-0.0677],[-1.3773,-1.7695,0.8186,-0.0944,1.8049,0.954,-2.6969,-0.7025,-0.3366,0.8811],[1.4153,-0.4177,0.686,1.0798,-1.9479,0.4143,-0.1206,-1.0457,-3.3808,0.6805],[-1.4436,1.5501,-1.1485,0.7292,0.7002,0.3007,0.5641,-0.599,-1.3032,-2.076],[-0.2537,1.2085,0.3725,-0.2129,0.8247,-1.0525,-0.3542,-0.7188,0.2004,-0.7806],[0.8215,-0.2137,-1.9928,0.0707,-0.8555,0.892,-0.3282,0.1497,-0.4254,0.7688],[-1.258,-0.5905,0.3244,0.6978,-0.3166,0.8566,-0.8542,0.9089,0.2968,-0.2773],[-2.0009,1.5762,0.6689,-0.6616,-1.2341,0.1577,-0.1977,-0.2735,-0.3958,0.3071],[0.5749,0.418,1.5549,-0.7361,-0.1693,-1.2635,1.0093,-2.4583,0.5113,-0.6181],[-0.7341,0.1646,-1.251,-0.3507,1.1614,-0.0446,0.9865,1.0986,-1.8205,1.3345],[-0.2767,0.5897,-1.6239,0.4925,0.7596,0.789,0.7726,-0.1579,-0.4169,-1.2315],[0.5122,-0.4661,-0.5144,-3.4333,-0.0903,0.1977,1.459,-0.285,0.4789,0.8835],[0.3104,-0.4644,-1.0904,-0.3896,-0.256,-0.4285,-0.0459,-0.1346,0.975,0.5877],[-1.4785,1.5486,-2.4659,-0.2973,1.1257,-0.8203,-0.512,0.3188,0.2779,-0.0677],[-0.0157,-0.0301,0.0052,-0.0089,0.0187,-0.0042,-0.0155,0.0347,0.0204,-0.017],[0.4201,-2.3533,1.1317,1.0104,-1.8105,0.1439,0.0253,1.0156,-0.3872,0.0639],[-0.0974,-0.5442,-1.4226,0.833,-0.0894,-0.0673,0.2967,0.7849,0.2382,0.4744],[-0.4108,1.6535,0.1912,0.6405,-0.2123,-2.7441,-0.3622,0.7323,-1.0378,0.0017]],"b2":[0.2494,-0.6718,-0.058,0.1213,-0.3184,0.4062,0.0986,0.0221,0.2712,-0.2414],"cal":[[0,0.6,4,1],[0.6,0.8,4,2],[0.8,0.95,8,4],[0.95,0.99,10,10],[0.99,1.01,424,423]]};
+const cv=$("cv"),ctx=cv.getContext("2d"),mini=$("mini"),mctx=mini.getContext("2d");
+const st={drawn:false,probs:null,last:null,judged:0,hit:0,ood:new Set(),unsure:false,sawCal:false,src:"user"};
+function reset(){ctx.fillStyle="#fff";ctx.fillRect(0,0,256,256);ctx.strokeStyle="#000";ctx.lineWidth=18;ctx.lineCap="round";ctx.lineJoin="round";}
+reset();
+let drawing=false,lx=0,ly=0;
+function pos(e){const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*256/r.width,(e.clientY-r.top)*256/r.height];}
+cv.addEventListener("pointerdown",e=>{drawing=true;cv.setPointerCapture(e.pointerId);[lx,ly]=pos(e);ctx.beginPath();ctx.arc(lx,ly,9,0,7);ctx.fillStyle="#000";ctx.fill();st.src="user";});
+cv.addEventListener("pointermove",e=>{if(!drawing)return;const [x,y]=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(x,y);ctx.stroke();lx=x;ly=y;});
+const end=()=>{if(drawing){drawing=false;st.drawn=true;run();}};
+cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);cv.addEventListener("pointerleave",end);
+/* preprocesamiento: recortar, centrar en 32x32, engrosar, contar bloques 4x4 -> 8x8 (0..16) */
+function features(){const d=ctx.getImageData(0,0,256,256).data;let x0=256,y0=256,x1=-1,y1=-1;
+  for(let y=0;y<256;y++)for(let x=0;x<256;x++){if(d[(y*256+x)*4]<128){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}}
+  if(x1<0)return null;const w=x1-x0+1,h=y1-y0+1,s=28/Math.max(w,h),nw=Math.max(1,Math.round(w*s)),nh=Math.max(1,Math.round(h*s));
+  const o=document.createElement("canvas");o.width=32;o.height=32;const oc=o.getContext("2d");oc.fillStyle="#fff";oc.fillRect(0,0,32,32);
+  oc.imageSmoothingEnabled=true;oc.drawImage(cv,x0,y0,w,h,Math.floor((32-nw)/2),Math.floor((32-nh)/2),nw,nh);
+  const od=oc.getImageData(0,0,32,32).data;let g=[];for(let i=0;i<1024;i++)g.push(255-od[i*4]>100?1:0);
+  for(let it=0;it<2;it++){const n=g.slice();for(let y=0;y<32;y++)for(let x=0;x<32;x++){const i=y*32+x;if(g[i])continue;if((x>0&&g[i-1])||(x<31&&g[i+1])||(y>0&&g[i-32])||(y<31&&g[i+32]))n[i]=1;}g=n;}
+  const f=new Array(64).fill(0);for(let y=0;y<32;y++)for(let x=0;x<32;x++)f[(y>>2)*8+(x>>2)]+=g[y*32+x];return f;}
+function forward(f){const x=f.map(v=>v/16),h=M.b1.map((b,j)=>{let s=b;for(let i=0;i<64;i++)s+=x[i]*M.W1[i][j];return Math.max(0,s);});
+  const o=M.b2.map((b,k)=>{let s=b;for(let j=0;j<h.length;j++)s+=h[j]*M.W2[j][k];return s;});const mx=Math.max(...o),e=o.map(v=>Math.exp(v-mx)),S=e.reduce((a,b)=>a+b);return e.map(v=>v/S);}
+function drawMini(f){const im=mctx.createImageData(8,8);f.forEach((v,i)=>{const c=255-Math.round(v/16*255);im.data.set([c,c,c,255],i*4);});mctx.putImageData(im,0,0);}
+function bars(p){const w=p?p.indexOf(Math.max(...p)):-1;$("bars").innerHTML=Array.from({length:10},(_,k)=>`<div class="bar ${k===w?"win":""}"><span>${k}</span><div class="t"><i style="width:${p?p[k]*100:0}%"></i></div><span class="v">${p?(p[k]*100).toFixed(p[k]>.995||p[k]<.005?0:1)+"%":""}</span></div>`).join("");}
+function run(){const f=features();if(!f){bars(null);drawMini(new Array(64).fill(0));return;}drawMini(f);const p=forward(f);st.probs=p;bars(p);
+  const k=p.indexOf(Math.max(...p)),c=p[k],L=$("light");
+  L.className="light "+(c>=.9?"g":c>=.6?"y":"r");
+  $("ltext").innerHTML=c>=.9?`Dice <strong>${k}</strong> con ${Math.round(c*100)} %: la red respondería sola.`:c>=.6?`Dice <strong>${k}</strong> con ${Math.round(c*100)} %: mejor que lo revise alguien.`:`Duda (${Math.round(c*100)} %): debería pedir ayuda a una persona.`;
+  if(c<.6)st.unsure=true;
+  if(st.src==="user"){$("ask").hidden=false;
+    say($("fb"),c>=.9?"happy":c>=.6?"think":"wow",c>=.9?`La red está muy segura de que es un <strong>${k}</strong>. ¿Acertó? Responde con los botones.`:c>=.6?`La red cree que es un <strong>${k}</strong>, pero no está tan segura. Mira las barras: hay otro número que le compite.`:`¡La red duda! Ningún número la convence. Esa es justo la situación en la que conviene pasar el caso a una persona.`,c>=.9?"ok":"info");}
+  G.update(st);}
+$("yes").onclick=()=>{st.judged++;st.hit++;$("ask").hidden=true;say($("fb"),"happy",`¡Te entendió! Tu forma de escribir se parece a la de quienes le enseñaron. Lleva ${st.hit} de ${st.judged}.`,"ok");G.update(st);};
+$("no").onclick=()=>{st.judged++;$("ask").hidden=true;say($("fb"),"sad",`Se equivocó, y ${st.probs&&Math.max(...st.probs)>.9?"lo peor: <strong>muy segura</strong>":"al menos no estaba tan segura"}. Esta red aprendió con dígitos escritos por otras personas, hace años. Si tu letra es distinta, para ella es algo que nunca vio. Lleva ${st.hit} de ${st.judged}.`,"bad");G.update(st);};
+$("clear").onclick=()=>{reset();st.drawn=false;$("ask").hidden=true;bars(null);drawMini(new Array(64).fill(0));$("light").className="light";$("ltext").textContent="Dibuja un número del 0 al 9.";say($("fb"),"think","Lienzo limpio. Dibuja grande, que ocupe casi todo el cuadro.");};
+const PRE={
+ A:()=>{ctx.beginPath();ctx.moveTo(60,220);ctx.lineTo(128,36);ctx.lineTo(196,220);ctx.moveTo(88,150);ctx.lineTo(168,150);ctx.stroke();},
+ gar:()=>{let x=128,y=128;ctx.beginPath();ctx.moveTo(x,y);for(let i=0;i<14;i++){x=40+Math.random()*176;y=40+Math.random()*176;ctx.lineTo(x,y);}ctx.stroke();},
+ neg:()=>{ctx.fillStyle="#000";ctx.fillRect(40,40,176,176);},
+ llama:()=>{ctx.beginPath();ctx.moveTo(150,40);ctx.lineTo(150,130);ctx.lineTo(80,130);ctx.lineTo(80,215);ctx.moveTo(150,130);ctx.lineTo(150,215);ctx.moveTo(110,130);ctx.lineTo(110,215);ctx.moveTo(150,40);ctx.lineTo(175,52);ctx.moveTo(150,40);ctx.lineTo(140,25);ctx.stroke();}};
+const PN={A:"una letra A",gar:"un garabato",neg:"un cuadro negro",llama:"una llama dibujada con palitos"};
+document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{reset();PRE[b.dataset.p]();st.src="ood";st.drawn=true;$("ask").hidden=true;run();st.ood.add(b.dataset.p);
+  const p=st.probs,k=p.indexOf(Math.max(...p)),c=p[k];
+  say($("fb"),c>=.6?"sad":"wow",`Le mostramos ${PN[b.dataset.p]} y respondió <strong>${k}</strong> con ${Math.round(c*100)} % de confianza. ${c>=.9?"¡Muy segura de algo que ni siquiera es un número!":c>=.6?"Ni siquiera dudó lo suficiente.":"Esta vez dudó, pero igual eligió un número."} La red no tiene la opción «esto no es un número»: solo puede repartir su confianza entre los diez dígitos.`,c>=.6?"bad":"info");G.update(st);});
+/* calibración */
+function cal(){$("cal").innerHTML=`<thead><tr><th>Cuando la red dijo…</th><th>Respuestas</th><th>Aciertos</th><th>% real</th></tr></thead><tbody>`+M.cal.map(([a,b,n,ok])=>`<tr><td>${Math.round(a*100)}–${Math.round(Math.min(b,1)*100)} %</td><td class="mono">${n}</td><td class="mono">${ok}</td><td class="mono">${n?Math.round(ok/n*100)+" %":"–"}</td></tr>`).join("")+"</tbody>";}
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&!st.sawCal){st.sawCal=true;const top=M.cal[M.cal.length-1];say($("fb2"),"think",`Cuando la red dijo 99 % o más, acertó ${top[3]} de ${top[2]} veces. Cuando dudaba, acertó bastante menos. En este conjunto, su confianza <strong>sí ordena</strong> bien los casos fáciles y difíciles. Pero ojo: eso vale para dígitos parecidos a los que vio, no para garabatos.`);G.update(st);}});},{threshold:.4});
+io.observe($("cal"));
+const G=Guide($("guide"),{
+ intro:"¡Hola! Soy <strong>Chispa</strong>. Esta red ya terminó su entrenamiento: ahora solo responde. Vamos a ver qué hace con cosas que nunca vio: tu letra, una letra A y hasta una llama.",
+ missions:[
+  {text:"Dibuja un número del 0 al 9, grande, y dime si la red <strong>acertó</strong>.",hint:"Usa el dedo o el mouse. Después toca ✅ o ❌.",done:s=>s.judged>=1,ok:"Ya probaste la red con un dato que nunca vio: tu propia letra."},
+  {text:"Dibuja <strong>tres números más</strong> y anota cuántos acierta.",hint:"Borra entre dibujo y dibujo. Prueba números difíciles como el 1, el 7 o el 9.",done:s=>s.judged>=4,ok:s=>`Acertó ${s.hit} de ${s.judged}. Si falló alguno, no es tu culpa: tu letra es distinta a la de quienes le enseñaron.`},
+  {text:"Toca <strong>dos botones</strong> de «Muéstrale algo que nunca vio».",hint:"Están debajo del lienzo: letra A, garabato, cuadro negro, llama.",done:s=>s.ood.size>=2,ok:"¿Viste? Siempre elige un número. La red no sabe decir «esto no es lo mío»."},
+  {text:"Consigue que la red <strong>dude</strong> (semáforo rojo), dibujando o con los botones.",hint:"Prueba un número a medio camino entre dos, como un 4 que parece 9, o la letra A.",done:s=>s.unsure,ok:"Cuando duda, la mejor decisión es pasarle el caso a una persona."},
+  {text:"Baja hasta la tabla <strong>«¿Cuánto vale su confianza?»</strong>.",hint:"Está debajo del laboratorio.",done:s=>s.sawCal,ok:"Contar aciertos por grupos de confianza es la forma de saber cuándo creerle a una red."}],
+ finale:"¡Laboratorio completo! Una red entrenada <strong>generaliza</strong> a lo que se parece a sus datos, <strong>siempre responde</strong> aunque no deba, y su <strong>confianza</strong> hay que medirla antes de creerle."});
+G.onMission=()=>G.update(st);
+bars(null);drawMini(new Array(64).fill(0));cal();say($("fb"),"think","Dibuja grande, que el número ocupe casi todo el cuadro.");
+</script>
+</body></html>
